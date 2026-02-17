@@ -10,27 +10,25 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Inter', -apple-system, sans-serif;
         }
 
         body {
-            min-height: 100vh;
             background: #0b1219;
             display: flex;
             align-items: center;
             justify-content: center;
+            min-height: 100vh;
             padding: 12px;
         }
 
-        .game-card {
+        .game-container {
             max-width: 480px;
             width: 100%;
             background: rgba(18, 28, 40, 0.95);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 215, 0, 0.2);
             border-radius: 32px;
-            padding: 20px 16px 24px;
-            box-shadow: 0 30px 50px rgba(0, 0, 0, 0.7);
+            padding: 20px 16px;
+            border: 1px solid rgba(255,215,0,0.2);
         }
 
         #gameCanvas {
@@ -42,25 +40,22 @@
         }
 
         .balance-panel {
-            background: linear-gradient(145deg, #1e2c3a, #14222e);
+            background: #1e2c3a;
             border-radius: 40px;
             padding: 12px 16px;
             display: flex;
-            align-items: center;
             justify-content: space-between;
+            color: white;
             border: 1px solid #3f5567;
             margin: 16px 0;
-            color: #fff;
         }
 
         .balance-value {
-            font-size: 22px;
             background: #0d1c28;
             padding: 6px 20px;
             border-radius: 40px;
             color: #ffd966;
-            border: 1px solid #ffd96655;
-            font-weight: 700;
+            font-weight: bold;
         }
 
         .bet-grid {
@@ -74,20 +69,16 @@
             background: #253442;
             border: 1px solid #3b4e5e;
             color: white;
-            font-size: 16px;
-            font-weight: 600;
-            padding: 12px 0;
+            padding: 12px;
             border-radius: 30px;
-            box-shadow: 0 4px 0 #0f171f;
+            font-weight: bold;
             cursor: pointer;
-            transition: 0.2s;
         }
 
         .bet-btn.selected {
-            background: linear-gradient(145deg, #f5b042, #e08e1a);
+            background: #f5b042;
+            color: black;
             border-color: #ffc107;
-            color: #0b0f15;
-            box-shadow: 0 4px 0 #9e621b, 0 0 15px #ffb347;
         }
 
         .action-row {
@@ -98,87 +89,46 @@
 
         .action-btn {
             flex: 1;
-            padding: 14px 0;
+            padding: 14px;
             border: none;
             border-radius: 40px;
-            font-weight: 700;
+            font-weight: bold;
             font-size: 18px;
-            text-transform: uppercase;
             cursor: pointer;
-            box-shadow: 0 4px 0 #0f1a20;
-            transition: 0.2s;
+            color: white;
         }
 
         .play-btn {
-            background: linear-gradient(145deg, #1f8b4c, #0f6e3a);
-            color: white;
+            background: #1f8b4c;
         }
 
         .play-btn:disabled {
             opacity: 0.5;
-            cursor: not-allowed;
         }
 
         .cashout-btn {
-            background: linear-gradient(145deg, #cc7b2b, #b35f1a);
-            color: white;
+            background: #cc7b2b;
         }
 
         .cashout-btn:disabled {
             opacity: 0.5;
-            cursor: not-allowed;
         }
 
         .history-container {
             background: #0f1c26;
             border-radius: 16px;
             padding: 8px;
-            border: 1px solid #2b4455;
-            margin: 16px 0 8px;
             max-height: 120px;
             overflow-y: auto;
-            scrollbar-width: thin;
-            scrollbar-color: #ffd966 #1a2c38;
-        }
-
-        .history-container::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        .history-container::-webkit-scrollbar-track {
-            background: #1a2c38;
-        }
-
-        .history-container::-webkit-scrollbar-thumb {
-            background: #ffd966;
-            border-radius: 4px;
+            margin: 16px 0;
         }
 
         .history-item {
             padding: 6px 10px;
             margin: 2px 0;
             border-radius: 8px;
-            font-size: 14px;
-            display: flex;
-            justify-content: space-between;
             background: #1a2c38;
             color: #c0d2e0;
-        }
-
-        .history-item.bigwin {
-            background: #4a1d63;
-            color: #ffb0ff;
-        }
-
-        .history-item.superwin {
-            background: #b8860b;
-            color: #fff0b0;
-        }
-
-        .history-item.grandwin {
-            background: #daa520;
-            color: #000;
-            font-weight: bold;
         }
 
         .live-counter {
@@ -187,8 +137,6 @@
             justify-content: center;
             gap: 6px;
             color: #7ec8ff;
-            font-size: 14px;
-            margin-top: 12px;
         }
 
         .live-dot {
@@ -207,10 +155,10 @@
     </style>
 </head>
 <body>
-    <div class="game-card">
-        <h1 style="text-align: center; color: #ffd966; margin-bottom: 8px;">✈️ AirCas</h1>
-
-        <canvas id="gameCanvas"></canvas>
+    <div class="game-container">
+        <h1 style="color: #ffd966; text-align: center; margin-bottom: 8px;">✈️ AirCas</h1>
+        
+        <div id="gameCanvas"></div>
 
         <div class="balance-panel">
             <span>💰 Twój balans</span>
@@ -238,57 +186,153 @@
     </div>
 
     <script>
-        // Telegram WebApp
+        // Telegram
         const tg = window.Telegram?.WebApp;
         if (tg) {
             tg.ready();
             tg.expand();
         }
 
-        // ========== НАСТРОЙКИ ==========
+        // Игровые переменные
         let balance = 1000;
         let currentBet = 10;
         let gameActive = false;
         let multiplier = 1.0;
         let crashPoint = 0;
-        let gameInterval = null;
+        let gameTimer = null;
         let liveCount = 128;
         let history = [];
 
-        // Canvas
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        
-        // Размеры канваса
-        function resizeCanvas() {
-            canvas.width = canvas.clientWidth;
-            canvas.height = canvas.clientHeight;
+        // DOM элементы
+        const balanceEl = document.getElementById('balance-value');
+        const playBtn = document.getElementById('play-btn');
+        const cashoutBtn = document.getElementById('cashout-btn');
+        const historyContainer = document.getElementById('historyContainer');
+        const liveCountEl = document.getElementById('liveCount');
+
+        // Phaser
+        const config = {
+            type: Phaser.AUTO,
+            parent: 'gameCanvas',
+            width: 480,
+            height: 270,
+            scene: {
+                preload: preload,
+                create: create,
+                update: update
+            }
+        };
+        const game = new Phaser.Game(config);
+
+        let plane;
+        let clouds = [];
+        let multiplierText;
+        let explosion;
+
+        function preload() {
+            // Создаём графику прямо в коде (без внешних файлов)
+            this.load.image('pixel', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==');
         }
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
 
-        // Позиция самолёта
-        let planeX = 0;
-        let planeY = 0;
+        function create() {
+            // Градиентный фон
+            const bg = this.add.graphics();
+            bg.fillGradientStyle(0x1e3b4a, 0x1e3b4a, 0x0f2835, 0x0f2835, 1);
+            bg.fillRect(0, 0, 480, 270);
 
-        // ========== РЕАЛЬНЫЕ ШАНСЫ ==========
+            // Облака
+            for (let i = 0; i < 5; i++) {
+                const cloud = this.add.graphics();
+                cloud.fillStyle(0xffffff, 0.1);
+                cloud.fillCircle(50 + i * 80, 40 + i * 20, 20);
+                clouds.push(cloud);
+            }
+
+            // Самолёт (создаём из графики)
+            plane = this.add.graphics();
+            
+            // Текст множителя
+            multiplierText = this.add.text(360, 20, '1.00x', {
+                fontSize: '32px',
+                fontFamily: 'Inter',
+                color: '#ffd966',
+                stroke: '#000',
+                strokeThickness: 4
+            });
+
+            // Взрыв (пока скрыт)
+            explosion = this.add.graphics();
+            explosion.visible = false;
+        }
+
+        function update() {
+            if (!plane) return;
+
+            // Очищаем и перерисовываем самолёт
+            plane.clear();
+            
+            if (gameActive) {
+                // Двигаем самолёт
+                const progress = Math.min(multiplier / 20, 0.9);
+                const x = 50 + progress * 380;
+                const y = 150 + Math.sin(Date.now() * 0.005) * 10;
+
+                // Корпус
+                plane.fillStyle(0xffffff);
+                plane.fillTriangle(x, y-8, x+30, y, x, y+8);
+                
+                // Крылья
+                plane.fillStyle(0xff6b6b);
+                plane.fillRect(x+10, y-12, 8, 4);
+                plane.fillRect(x+10, y+8, 8, 4);
+                
+                // Хвост
+                plane.fillStyle(0x4a90e2);
+                plane.fillTriangle(x-5, y-5, x-15, y-10, x-15, y);
+            } else {
+                // Самолёт на старте
+                plane.fillStyle(0xffffff);
+                plane.fillTriangle(50, 140, 80, 150, 50, 160);
+                plane.fillStyle(0xff6b6b);
+                plane.fillRect(60, 135, 8, 4);
+                plane.fillRect(60, 155, 8, 4);
+            }
+
+            // Обновляем множитель
+            multiplierText.setText(multiplier.toFixed(2) + 'x');
+
+            // Эффект взрыва
+            if (!gameActive && crashPoint > 0 && multiplier >= crashPoint) {
+                explosion.visible = true;
+                explosion.clear();
+                explosion.fillStyle(0xff4444);
+                for (let i = 0; i < 5; i++) {
+                    const offsetX = Math.sin(Date.now() * 0.02 + i) * 20;
+                    const offsetY = Math.cos(Date.now() * 0.02 + i) * 20;
+                    explosion.fillCircle(250 + offsetX, 150 + offsetY, 10 + i * 2);
+                }
+            } else {
+                explosion.visible = false;
+            }
+
+            // Двигаем облака
+            clouds.forEach((cloud, i) => {
+                cloud.x += 0.2;
+                if (cloud.x > 480) cloud.x = -50;
+            });
+        }
+
+        // Шансы
         function getCrashPoint() {
             const r = Math.random();
-            // 40% до 1.5x
             if (r < 0.4) return 1.01 + Math.random() * 0.49;
-            // 30% до 2.5x
             if (r < 0.7) return 1.5 + Math.random() * 1.0;
-            // 15% до 5x
             if (r < 0.85) return 2.5 + Math.random() * 2.5;
-            // 10% до 10x
             if (r < 0.95) return 5.0 + Math.random() * 5.0;
-            // 4% до 20x
             if (r < 0.99) return 10.0 + Math.random() * 10.0;
-            // 1% выше 20x
             return 20.0 + Math.random() * 30.0;
         }
 
-        // ========== СКОРОСТЬ РОСТА ==========
         function getSpeed() {
             if (multiplier < 2) return 0.006;
             if (multiplier < 5) return 0.012;
@@ -297,253 +341,71 @@
             return 0.05;
         }
 
-        // ========== ТИП ВЫИГРЫША ==========
-        function getWinType(mult) {
-            if (mult >= 20) return 'grandwin';
-            if (mult >= 10) return 'superwin';
-            if (mult >= 5) return 'bigwin';
-            return 'normal';
-        }
-
-        // ========== ДОБАВЛЕНИЕ В ИСТОРИЮ ==========
-        function addHistoryItem(mult, win = null, type = 'normal') {
-            const container = document.getElementById('historyContainer');
+        function addHistory(mult, win = null) {
             const item = document.createElement('div');
             item.className = 'history-item';
-            
-            if (type === 'bigwin') item.classList.add('bigwin');
-            if (type === 'superwin') item.classList.add('superwin');
-            if (type === 'grandwin') item.classList.add('grandwin');
-            
-            let text = `x${mult.toFixed(2)}`;
-            if (win !== null) {
-                text += ` · +${win}`;
-                if (type === 'bigwin') text += ' 🎰';
-                if (type === 'superwin') text += ' ⭐';
-                if (type === 'grandwin') text += ' 🏆';
-            } else {
-                text += ` · 💥`;
-            }
-            
-            item.textContent = text;
-            container.prepend(item);
-            
-            if (container.children.length > 20) {
-                container.removeChild(container.lastChild);
+            item.textContent = win ? `x${mult.toFixed(2)} · +${win}` : `x${mult.toFixed(2)} · 💥`;
+            historyContainer.prepend(item);
+            if (historyContainer.children.length > 20) {
+                historyContainer.removeChild(historyContainer.lastChild);
             }
         }
 
-        // ========== ОТРИСОВКА ==========
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Градиентное небо
-            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            gradient.addColorStop(0, '#1e3b4a');
-            gradient.addColorStop(1, '#0f2835');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Облака
-            ctx.fillStyle = 'rgba(255,255,255,0.1)';
-            for (let i = 0; i < 5; i++) {
-                ctx.beginPath();
-                ctx.arc(
-                    (canvas.width * (i * 0.2 + 0.1) + Date.now() * 0.02) % (canvas.width + 100) - 50,
-                    canvas.height * 0.2,
-                    30,
-                    0,
-                    Math.PI * 2
-                );
-                ctx.fill();
-            }
-
-            // Множитель
-            ctx.font = 'bold 36px Inter, Arial';
-            ctx.fillStyle = '#ffd966';
-            ctx.shadowColor = '#ffb347';
-            ctx.shadowBlur = 20;
-            ctx.fillText(multiplier.toFixed(2) + 'x', canvas.width - 120, 60);
-            ctx.shadowBlur = 0;
-
-            // След самолёта
-            if (planeX > 0.1) {
-                ctx.beginPath();
-                ctx.setLineDash([5, 5]);
-                ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-                ctx.lineWidth = 2;
-                ctx.moveTo(20, canvas.height * 0.5);
-                ctx.lineTo(planeX - 30, planeY - 10);
-                ctx.stroke();
-                ctx.setLineDash([]);
-            }
-
-            // Самолёт
-            const planeScreenX = Math.min(planeX, canvas.width - 40);
-            
-            ctx.save();
-            ctx.translate(planeScreenX, planeY);
-            
-            // Тень
-            ctx.shadowColor = '#ffd966';
-            ctx.shadowBlur = 15;
-            
-            // Корпус
-            ctx.fillStyle = '#ffffff';
-            ctx.beginPath();
-            ctx.moveTo(0, -8);
-            ctx.lineTo(30, 0);
-            ctx.lineTo(0, 8);
-            ctx.closePath();
-            ctx.fill();
-            
-            // Крылья
-            ctx.fillStyle = '#ff6b6b';
-            ctx.fillRect(10, -12, 8, 4);
-            ctx.fillRect(10, 8, 8, 4);
-            
-            // Хвост
-            ctx.fillStyle = '#4a90e2';
-            ctx.beginPath();
-            ctx.moveTo(-5, -5);
-            ctx.lineTo(-15, -10);
-            ctx.lineTo(-15, 0);
-            ctx.closePath();
-            ctx.fill();
-            
-            ctx.restore();
-
-            // Эффект взрыва
-            if (!gameActive && crashPoint > 0 && multiplier >= crashPoint) {
-                ctx.save();
-                ctx.translate(planeScreenX, planeY);
-                ctx.shadowColor = '#ff4444';
-                ctx.shadowBlur = 30;
-                ctx.fillStyle = '#ff4444';
-                ctx.beginPath();
-                ctx.arc(0, 0, 30 + Math.sin(Date.now() * 0.02) * 10, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
-            }
-        }
-
-        // ========== CRASH ==========
         function crash() {
-            clearInterval(gameInterval);
+            clearInterval(gameTimer);
             gameActive = false;
-            document.getElementById('play-btn').disabled = false;
-            document.getElementById('cashout-btn').disabled = true;
-            
-            addHistoryItem(crashPoint, null);
-            
-            multiplier = 1.0;
-            planeX = 0;
-            planeY = canvas.height * 0.5 - 10;
-
-            if (tg) {
-                tg.sendData(JSON.stringify({
-                    action: 'crash',
-                    crash: crashPoint.toFixed(2),
-                    loss: currentBet,
-                    balance: balance
-                }));
-            }
+            playBtn.disabled = false;
+            cashoutBtn.disabled = true;
+            addHistory(crashPoint);
         }
 
-        // ========== WYPŁATA ==========
         function cashOut() {
             if (!gameActive) return;
-
-            clearInterval(gameInterval);
+            clearInterval(gameTimer);
             gameActive = false;
-            document.getElementById('play-btn').disabled = false;
-            document.getElementById('cashout-btn').disabled = true;
-
+            playBtn.disabled = false;
+            cashoutBtn.disabled = true;
             const win = Math.floor(currentBet * multiplier);
             balance += win;
-            document.getElementById('balance-value').innerText = balance;
-
-            const winType = getWinType(multiplier);
-            addHistoryItem(multiplier, win, winType);
-            
-            multiplier = 1.0;
-            planeX = 0;
-            planeY = canvas.height * 0.5 - 10;
-
-            if (tg) {
-                tg.sendData(JSON.stringify({
-                    action: 'win',
-                    multiplier: multiplier.toFixed(2),
-                    win: win,
-                    balance: balance
-                }));
-            }
+            balanceEl.innerText = balance;
+            addHistory(multiplier, win);
         }
 
-        // ========== START ==========
         function startGame() {
-            if (gameActive) return;
-            if (balance < currentBet) return;
-
+            if (gameActive || balance < currentBet) return;
             balance -= currentBet;
-            document.getElementById('balance-value').innerText = balance;
-
+            balanceEl.innerText = balance;
             crashPoint = getCrashPoint();
             multiplier = 1.0;
-            planeX = 20;
-            planeY = canvas.height * 0.5 - 10;
             gameActive = true;
-
-            document.getElementById('play-btn').disabled = true;
-            document.getElementById('cashout-btn').disabled = false;
-
-            gameInterval = setInterval(() => {
+            playBtn.disabled = true;
+            cashoutBtn.disabled = false;
+            
+            gameTimer = setInterval(() => {
                 multiplier += getSpeed();
-                planeX = Math.min(planeX + 2, canvas.width - 40);
-                planeY = canvas.height * 0.5 - 10 + Math.sin(Date.now() * 0.01) * 5;
-
-                if (multiplier >= crashPoint) {
-                    crash();
-                }
-            }, 50);
+                if (multiplier >= crashPoint) crash();
+            }, 100);
         }
 
-        // ========== ИНИЦИАЛИЗАЦИЯ ==========
+        // Кнопки ставок
         document.querySelectorAll('.bet-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 if (gameActive) return;
-                
                 document.querySelectorAll('.bet-btn').forEach(b => b.classList.remove('selected'));
                 this.classList.add('selected');
-                
-                if (this.dataset.bet === 'all') {
-                    currentBet = balance;
-                } else {
-                    currentBet = parseInt(this.dataset.bet);
-                }
+                currentBet = this.dataset.bet === 'all' ? balance : parseInt(this.dataset.bet);
             });
         });
 
-        document.getElementById('play-btn').addEventListener('click', startGame);
-        document.getElementById('cashout-btn').addEventListener('click', cashOut);
+        playBtn.addEventListener('click', startGame);
+        cashoutBtn.addEventListener('click', cashOut);
 
         // Live counter
         setInterval(() => {
-            const change = Math.floor(Math.random() * 7) + 2;
-            if (Math.random() > 0.5) {
-                liveCount += change;
-            } else {
-                liveCount = Math.max(40, liveCount - change);
-            }
-            document.getElementById('liveCount').innerText = liveCount;
+            liveCount += Math.random() > 0.5 ? Math.floor(Math.random() * 7) + 2 : -Math.floor(Math.random() * 5) - 2;
+            liveCount = Math.max(40, Math.min(300, liveCount));
+            liveCountEl.innerText = liveCount;
         }, 7000);
-
-        // Анимация
-        function animate() {
-            draw();
-            requestAnimationFrame(animate);
-        }
-        animate();
     </script>
 </body>
 </html>
