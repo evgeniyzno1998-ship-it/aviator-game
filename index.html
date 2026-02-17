@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aviator Casino</title>
+    <title>AirCas ✈️</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * {
@@ -54,6 +54,8 @@
             margin: 20px 0 16px;
             border: 1px solid #2a3a48;
             box-shadow: inset 0 5px 10px rgba(0,0,0,0.6), 0 10px 20px rgba(0,0,0,0.5);
+            position: relative;
+            overflow: hidden;
         }
 
         .multiplier {
@@ -66,19 +68,40 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
             text-shadow: 0 0 30px #ffb347;
+            position: relative;
+            z-index: 2;
+        }
+
+        .win-animation {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at center, rgba(255,215,0,0.3) 0%, transparent 70%);
+            animation: winPulse 2s ease-out;
+            z-index: 1;
+        }
+
+        @keyframes winPulse {
+            0% { opacity: 0; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+            100% { opacity: 0; transform: scale(1.5); }
+        }
+
+        .plane-container {
+            position: relative;
+            height: 80px;
+            margin: 10px 0 20px;
+            overflow: visible;
         }
 
         .plane-emoji {
-            font-size: 56px;
-            text-align: center;
+            font-size: 48px;
+            position: absolute;
+            left: 0;
             filter: drop-shadow(0 0 12px #7ec8ff);
-            animation: fly 2.2s infinite alternate ease-in-out;
-            margin: -10px 0 10px;
-        }
-
-        @keyframes fly {
-            0% { transform: translateX(-12px) rotate(-5deg); }
-            100% { transform: translateX(12px) rotate(5deg); }
+            transition: left 0.1s linear;
         }
 
         .balance-panel {
@@ -200,6 +223,62 @@
             color: #d4ffb0;
             border: 1px solid #9bff7a;
             backdrop-filter: blur(4px);
+            font-weight: bold;
+        }
+
+        .bigwin-message {
+            background: linear-gradient(145deg, #4a1d63cc, #2a0f3acc);
+            border-radius: 60px;
+            padding: 12px 24px;
+            color: #ffb0ff;
+            border: 1px solid #ff7aff;
+            backdrop-filter: blur(4px);
+            font-size: 18px;
+            font-weight: bold;
+            animation: bigwinPulse 1s infinite;
+        }
+
+        @keyframes bigwinPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .superwin-message {
+            background: linear-gradient(145deg, #b8860bcc, #8b4513cc);
+            border-radius: 60px;
+            padding: 12px 24px;
+            color: #fff0b0;
+            border: 1px solid #ffd700;
+            backdrop-filter: blur(4px);
+            font-size: 20px;
+            font-weight: bold;
+            animation: superwinPulse 0.7s infinite;
+        }
+
+        @keyframes superwinPulse {
+            0% { transform: scale(1); text-shadow: 0 0 5px gold; }
+            50% { transform: scale(1.1); text-shadow: 0 0 20px gold; }
+            100% { transform: scale(1); text-shadow: 0 0 5px gold; }
+        }
+
+        .grandwin-message {
+            background: linear-gradient(145deg, #daa520cc, #b8860bcc);
+            border-radius: 60px;
+            padding: 12px 24px;
+            color: #ffffff;
+            border: 1px solid #ffff00;
+            backdrop-filter: blur(4px);
+            font-size: 22px;
+            font-weight: bold;
+            animation: grandwinPulse 0.5s infinite;
+            box-shadow: 0 0 30px gold;
+        }
+
+        @keyframes grandwinPulse {
+            0% { transform: scale(1); background: #daa520cc; }
+            50% { transform: scale(1.15); background: #ffd700cc; }
+            100% { transform: scale(1); background: #daa520cc; }
         }
 
         .lose-message {
@@ -222,6 +301,33 @@
             margin: 16px 0 8px;
         }
 
+        .live-counter {
+            background: #1a2c38;
+            border-radius: 40px;
+            padding: 8px 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #7ec8ff;
+            font-size: 14px;
+            border: 1px solid #2a4a5a;
+            margin-top: 16px;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: #4caf50;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+
         .footer-note {
             color: #516b7c;
             font-size: 13px;
@@ -236,13 +342,15 @@
 </head>
 <body>
     <div class="game-card">
-        <h1>✈️ AVIATOR</h1>
+        <h1>✈️ AirCas</h1>
 
-        <div class="multiplier-box">
+        <div class="multiplier-box" id="multiplierBox">
             <div class="multiplier" id="multiplier">1.00x</div>
         </div>
 
-        <div class="plane-emoji" id="plane">✈️</div>
+        <div class="plane-container" id="planeContainer">
+            <div class="plane-emoji" id="plane">✈️</div>
+        </div>
 
         <div class="balance-panel">
             <span class="balance-label">💰 Twój balans</span>
@@ -267,6 +375,13 @@
             📍 Historia: —
         </div>
 
+        <div style="display: flex; justify-content: center;">
+            <div class="live-counter">
+                <span class="live-dot"></span>
+                <span id="liveCount">128</span> graczy online
+            </div>
+        </div>
+
         <div class="footer-note">
             ⚡ <span>gra testowa</span> · wkrótce nagrody
         </div>
@@ -285,15 +400,101 @@
         let crashPoint = 0;
         let gameInterval = null;
         let history = [];
+        let liveCount = 128;
 
         // Elementy DOM
         const multiplierEl = document.getElementById('multiplier');
+        const multiplierBox = document.getElementById('multiplierBox');
         const balanceEl = document.getElementById('balance-value');
         const playBtn = document.getElementById('play-btn');
         const cashoutBtn = document.getElementById('cashout-btn');
         const messageArea = document.getElementById('message-area');
         const historyEl = document.getElementById('history');
         const betButtons = document.querySelectorAll('.bet-btn');
+        const plane = document.getElementById('plane');
+        const planeContainer = document.getElementById('planeContainer');
+        const liveCountEl = document.getElementById('liveCount');
+
+        // Симуляция живого счётчика
+        setInterval(() => {
+            // Меняем на +/- 2-8 человек каждые 5-10 секунд
+            const change = Math.floor(Math.random() * 7) + 2;
+            if (Math.random() > 0.5) {
+                liveCount += change;
+            } else {
+                liveCount = Math.max(40, liveCount - change);
+            }
+            liveCountEl.innerText = liveCount;
+        }, 5000 + Math.random() * 5000);
+
+        // Реальные шансы краша (распределение как в казино)
+        function getCrashPoint() {
+            const r = Math.random();
+            // Распределение: 60% краш до 2x, 25% до 5x, 10% до 10x, 5% выше
+            if (r < 0.6) {
+                return 1.1 + Math.random() * 0.9; // 1.1 - 2.0
+            } else if (r < 0.85) {
+                return 2.0 + Math.random() * 3.0; // 2.0 - 5.0
+            } else if (r < 0.95) {
+                return 5.0 + Math.random() * 5.0; // 5.0 - 10.0
+            } else {
+                return 10.0 + Math.random() * 40.0; // 10.0 - 50.0
+            }
+        }
+
+        // Динамическая скорость роста
+        function getSpeed() {
+            if (multiplier < 2) return 0.008;
+            if (multiplier < 5) return 0.015;
+            if (multiplier < 10) return 0.025;
+            if (multiplier < 20) return 0.04;
+            return 0.06;
+        }
+
+        // Анимация самолёта
+        function updatePlanePosition() {
+            if (!gameActive) return;
+            const containerWidth = planeContainer.offsetWidth - 60;
+            const progress = Math.min(multiplier / 30, 1); // Максимум до 30x
+            const left = progress * containerWidth;
+            plane.style.left = left + 'px';
+        }
+
+        // Показать анимацию выигрыша
+        function showWinAnimation(mult) {
+            const anim = document.createElement('div');
+            anim.className = 'win-animation';
+            multiplierBox.appendChild(anim);
+            setTimeout(() => anim.remove(), 2000);
+        }
+
+        // Определить тип выигрыша
+        function getWinType(mult) {
+            if (mult >= 20) return 'GRAND WIN!';
+            if (mult >= 10) return 'SUPER WIN!';
+            if (mult >= 5) return 'BIG WIN!';
+            return 'WIN!';
+        }
+
+        // Показать сообщение с учётом типа выигрыша
+        function showWinMessage(text, mult) {
+            let className = 'win-message';
+            let displayText = text;
+            
+            if (mult >= 20) {
+                className = 'grandwin-message';
+                displayText = `🏆 GRAND WIN! x${mult.toFixed(2)} 🏆`;
+            } else if (mult >= 10) {
+                className = 'superwin-message';
+                displayText = `⭐ SUPER WIN! x${mult.toFixed(2)} ⭐`;
+            } else if (mult >= 5) {
+                className = 'bigwin-message';
+                displayText = `🎰 BIG WIN! x${mult.toFixed(2)} 🎰`;
+            }
+            
+            messageArea.innerHTML = `<div class="${className}">${displayText}</div>`;
+            setTimeout(() => messageArea.innerHTML = '', 3000);
+        }
 
         // Wybór stawki
         betButtons.forEach(btn => {
@@ -316,18 +517,12 @@
             balanceEl.innerText = balance;
         }
 
-        // Pokazanie wiadomości
-        function showMessage(text, type) {
-            messageArea.innerHTML = `<div class="${type}-message">${text}</div>`;
-            setTimeout(() => messageArea.innerHTML = '', 2800);
-        }
-
         // Aktualizacja historii
         function updateHistory() {
             if (history.length === 0) {
                 historyEl.innerHTML = '📍 Historia: —';
             } else {
-                historyEl.innerHTML = '📍 ' + history.slice(0, 6).join(' · ');
+                historyEl.innerHTML = '📍 ' + history.slice(0, 8).join(' · ');
             }
         }
 
@@ -341,10 +536,11 @@
             showMessage(`💥 KRAKS! Straciłeś ${currentBet} żetonów`, 'lose');
             
             history.unshift(`💥${crashPoint.toFixed(2)}x`);
-            if (history.length > 8) history.pop();
+            if (history.length > 10) history.pop();
             updateHistory();
             
             multiplierEl.innerText = '1.00x';
+            plane.style.left = '0px';
 
             tg.sendData(JSON.stringify({
                 action: 'crash',
@@ -367,13 +563,15 @@
             balance += win;
             updateBalance();
 
-            showMessage(`✅ WYGRANA! +${win} (${multiplier.toFixed(2)}x)`, 'win');
+            showWinMessage(`✅ +${win}`, multiplier);
+            showWinAnimation(multiplier);
             
             history.unshift(`✅${multiplier.toFixed(2)}x`);
-            if (history.length > 8) history.pop();
+            if (history.length > 10) history.pop();
             updateHistory();
             
             multiplierEl.innerText = '1.00x';
+            plane.style.left = '0px';
 
             tg.sendData(JSON.stringify({
                 action: 'win',
@@ -394,21 +592,30 @@
             balance -= currentBet;
             updateBalance();
 
-            crashPoint = 1.1 + Math.random() * 8.9; // od 1.1 do 10.0
+            crashPoint = getCrashPoint();
             multiplier = 1.0;
             gameActive = true;
 
             playBtn.disabled = true;
             cashoutBtn.disabled = false;
 
+            plane.style.left = '0px';
+
             gameInterval = setInterval(() => {
-                multiplier += 0.01;
+                multiplier += getSpeed();
                 multiplierEl.innerText = multiplier.toFixed(2) + 'x';
+                updatePlanePosition();
 
                 if (multiplier >= crashPoint) {
                     crash();
                 }
-            }, 90);
+            }, 100);
+        }
+
+        // Pokazanie wiadomości (dla zwykłych)
+        function showMessage(text, type) {
+            messageArea.innerHTML = `<div class="${type}-message">${text}</div>`;
+            setTimeout(() => messageArea.innerHTML = '', 2800);
         }
 
         // Pierwsze ustawienie
