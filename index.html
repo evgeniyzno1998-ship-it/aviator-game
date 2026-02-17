@@ -22,12 +22,12 @@
             padding: 12px;
         }
 
-        .game-container {
+        .game-card {
             max-width: 480px;
             width: 100%;
             background: rgba(18, 28, 40, 0.95);
             border-radius: 32px;
-            padding: 20px 16px;
+            padding: 20px 16px 24px;
             border: 1px solid rgba(255,215,0,0.2);
         }
 
@@ -44,18 +44,21 @@
             border-radius: 40px;
             padding: 12px 16px;
             display: flex;
+            align-items: center;
             justify-content: space-between;
-            color: white;
             border: 1px solid #3f5567;
             margin: 16px 0;
+            color: white;
         }
 
         .balance-value {
+            font-size: 22px;
             background: #0d1c28;
             padding: 6px 20px;
             border-radius: 40px;
             color: #ffd966;
-            font-weight: bold;
+            border: 1px solid #ffd96655;
+            font-weight: 700;
         }
 
         .bet-grid {
@@ -69,16 +72,20 @@
             background: #253442;
             border: 1px solid #3b4e5e;
             color: white;
-            padding: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            padding: 12px 0;
             border-radius: 30px;
-            font-weight: bold;
+            box-shadow: 0 4px 0 #0f171f;
             cursor: pointer;
+            transition: 0.2s;
         }
 
         .bet-btn.selected {
-            background: #f5b042;
-            color: black;
+            background: linear-gradient(145deg, #f5b042, #e08e1a);
             border-color: #ffc107;
+            color: #0b0f15;
+            box-shadow: 0 4px 0 #9e621b, 0 0 15px #ffb347;
         }
 
         .action-row {
@@ -89,46 +96,66 @@
 
         .action-btn {
             flex: 1;
-            padding: 14px;
+            padding: 14px 0;
             border: none;
             border-radius: 40px;
-            font-weight: bold;
+            font-weight: 700;
             font-size: 18px;
+            text-transform: uppercase;
             cursor: pointer;
+            box-shadow: 0 4px 0 #0f1a20;
             color: white;
         }
 
         .play-btn {
-            background: #1f8b4c;
+            background: linear-gradient(145deg, #1f8b4c, #0f6e3a);
         }
 
         .play-btn:disabled {
             opacity: 0.5;
+            cursor: not-allowed;
         }
 
         .cashout-btn {
-            background: #cc7b2b;
+            background: linear-gradient(145deg, #cc7b2b, #b35f1a);
         }
 
         .cashout-btn:disabled {
             opacity: 0.5;
+            cursor: not-allowed;
         }
 
         .history-container {
             background: #0f1c26;
             border-radius: 16px;
             padding: 8px;
+            border: 1px solid #2b4455;
+            margin: 16px 0 8px;
             max-height: 120px;
             overflow-y: auto;
-            margin: 16px 0;
+            scrollbar-width: thin;
+            scrollbar-color: #ffd966 #1a2c38;
         }
 
         .history-item {
             padding: 6px 10px;
             margin: 2px 0;
             border-radius: 8px;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
             background: #1a2c38;
             color: #c0d2e0;
+        }
+
+        .history-item.win {
+            background: #1d4a1d;
+            color: #a5d6a5;
+        }
+
+        .history-item.bigwin {
+            background: #4a1d63;
+            color: #ffb0ff;
         }
 
         .live-counter {
@@ -137,6 +164,8 @@
             justify-content: center;
             gap: 6px;
             color: #7ec8ff;
+            font-size: 14px;
+            margin-top: 12px;
         }
 
         .live-dot {
@@ -155,9 +184,9 @@
     </style>
 </head>
 <body>
-    <div class="game-container">
+    <div class="game-card">
         <h1 style="color: #ffd966; text-align: center; margin-bottom: 8px;">✈️ AirCas</h1>
-        
+
         <div id="gameCanvas"></div>
 
         <div class="balance-panel">
@@ -177,7 +206,11 @@
             <button class="action-btn cashout-btn" id="cashout-btn" disabled>🛬 ZABIERZ</button>
         </div>
 
-        <div class="history-container" id="historyContainer"></div>
+        <div class="history-container" id="historyContainer">
+            <div class="history-item win">x2.34 · +120 🎰</div>
+            <div class="history-item">x1.45 · 💥</div>
+            <div class="history-item win">x1.87 · +87</div>
+        </div>
 
         <div class="live-counter">
             <span class="live-dot"></span>
@@ -197,20 +230,19 @@
         let balance = 1000;
         let currentBet = 10;
         let gameActive = false;
-        let multiplier = 1.0;
+        let currentMultiplier = 1.0;
         let crashPoint = 0;
-        let gameTimer = null;
+        let gameInterval = null;
         let liveCount = 128;
-        let history = [];
 
         // DOM элементы
         const balanceEl = document.getElementById('balance-value');
         const playBtn = document.getElementById('play-btn');
         const cashoutBtn = document.getElementById('cashout-btn');
-        const historyContainer = document.getElementById('historyContainer');
         const liveCountEl = document.getElementById('liveCount');
+        const historyContainer = document.getElementById('historyContainer');
 
-        // Phaser
+        // Phaser настройки
         const config = {
             type: Phaser.AUTO,
             parent: 'gameCanvas',
@@ -228,27 +260,34 @@
         let clouds = [];
         let multiplierText;
         let explosion;
+        let smoke = [];
 
         function preload() {
-            // Создаём графику прямо в коде (без внешних файлов)
+            // Создаём спрайты прямо в коде (без внешних файлов)
             this.load.image('pixel', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==');
         }
 
         function create() {
-            // Градиентный фон
+            // Градиентный фон (небо)
             const bg = this.add.graphics();
             bg.fillGradientStyle(0x1e3b4a, 0x1e3b4a, 0x0f2835, 0x0f2835, 1);
             bg.fillRect(0, 0, 480, 270);
 
-            // Облака
-            for (let i = 0; i < 5; i++) {
+            // Облака (пушистые)
+            for (let i = 0; i < 6; i++) {
                 const cloud = this.add.graphics();
-                cloud.fillStyle(0xffffff, 0.1);
-                cloud.fillCircle(50 + i * 80, 40 + i * 20, 20);
+                cloud.fillStyle(0xffffff, 0.2);
+                
+                // Рисуем пушистое облако из нескольких кругов
+                cloud.fillCircle(50 + i * 70, 40 + (i % 3) * 20, 20);
+                cloud.fillCircle(70 + i * 70, 30 + (i % 3) * 20, 25);
+                cloud.fillCircle(90 + i * 70, 40 + (i % 3) * 20, 20);
+                cloud.fillCircle(60 + i * 70, 55 + (i % 3) * 20, 15);
+                
                 clouds.push(cloud);
             }
 
-            // Самолёт (создаём из графики)
+            // Самолёт (настоящий)
             plane = this.add.graphics();
             
             // Текст множителя
@@ -256,13 +295,23 @@
                 fontSize: '32px',
                 fontFamily: 'Inter',
                 color: '#ffd966',
-                stroke: '#000',
-                strokeThickness: 4
+                stroke: '#000000',
+                strokeThickness: 4,
+                shadow: { color: '#ffb347', blur: 10, fill: true }
             });
 
-            // Взрыв (пока скрыт)
+            // Эффект взрыва
             explosion = this.add.graphics();
             explosion.visible = false;
+
+            // Дым (для эффекта)
+            for (let i = 0; i < 3; i++) {
+                const s = this.add.graphics();
+                s.fillStyle(0xaaaaaa, 0.5);
+                s.fillCircle(0, 0, 10);
+                s.visible = false;
+                smoke.push(s);
+            }
         }
 
         function update() {
@@ -272,57 +321,74 @@
             plane.clear();
             
             if (gameActive) {
-                // Двигаем самолёт
-                const progress = Math.min(multiplier / 20, 0.9);
+                // Самолёт летит (позиция зависит от множителя)
+                const progress = Math.min(currentMultiplier / 20, 0.9);
                 const x = 50 + progress * 380;
                 const y = 150 + Math.sin(Date.now() * 0.005) * 10;
 
-                // Корпус
-                plane.fillStyle(0xffffff);
-                plane.fillTriangle(x, y-8, x+30, y, x, y+8);
+                // Рисуем красивый самолёт
+                plane.fillStyle(0xffdd44); // Жёлтый корпус
+                plane.fillTriangle(x, y-10, x+35, y, x, y+10);
                 
-                // Крылья
-                plane.fillStyle(0xff6b6b);
-                plane.fillRect(x+10, y-12, 8, 4);
-                plane.fillRect(x+10, y+8, 8, 4);
+                plane.fillStyle(0xffaa00); // Тёмно-жёлтые крылья
+                plane.fillRect(x+15, y-15, 12, 5);
+                plane.fillRect(x+15, y+10, 12, 5);
                 
-                // Хвост
-                plane.fillStyle(0x4a90e2);
-                plane.fillTriangle(x-5, y-5, x-15, y-10, x-15, y);
+                plane.fillStyle(0xcc8800); // Хвост
+                plane.fillTriangle(x-5, y-5, x-20, y-12, x-20, y);
+                
+                // Окошко
+                plane.fillStyle(0x88ccff);
+                plane.fillCircle(x+20, y-3, 3);
+                
+                // Дым из хвоста
+                smoke.forEach((s, i) => {
+                    s.visible = true;
+                    s.x = x - 30 - i * 5;
+                    s.y = y - 5 + Math.sin(Date.now() * 0.02 + i) * 3;
+                });
             } else {
-                // Самолёт на старте
-                plane.fillStyle(0xffffff);
-                plane.fillTriangle(50, 140, 80, 150, 50, 160);
-                plane.fillStyle(0xff6b6b);
-                plane.fillRect(60, 135, 8, 4);
-                plane.fillRect(60, 155, 8, 4);
+                // Самолёт на земле (статичный)
+                plane.fillStyle(0xffdd44);
+                plane.fillTriangle(50, 145, 85, 150, 50, 155);
+                plane.fillStyle(0xffaa00);
+                plane.fillRect(65, 135, 12, 5);
+                plane.fillRect(65, 160, 12, 5);
+                plane.fillStyle(0x88ccff);
+                plane.fillCircle(70, 147, 3);
+                
+                smoke.forEach(s => s.visible = false);
             }
 
-            // Обновляем множитель
-            multiplierText.setText(multiplier.toFixed(2) + 'x');
+            // Обновляем текст множителя
+            multiplierText.setText(currentMultiplier.toFixed(2) + 'x');
 
-            // Эффект взрыва
-            if (!gameActive && crashPoint > 0 && multiplier >= crashPoint) {
+            // Эффект взрыва при краше
+            if (!gameActive && crashPoint > 0 && currentMultiplier >= crashPoint) {
                 explosion.visible = true;
                 explosion.clear();
-                explosion.fillStyle(0xff4444);
-                for (let i = 0; i < 5; i++) {
-                    const offsetX = Math.sin(Date.now() * 0.02 + i) * 20;
-                    const offsetY = Math.cos(Date.now() * 0.02 + i) * 20;
-                    explosion.fillCircle(250 + offsetX, 150 + offsetY, 10 + i * 2);
+                
+                // Взрыв из оранжевых и красных кругов
+                for (let i = 0; i < 8; i++) {
+                    const intensity = Math.sin(Date.now() * 0.02 + i) * 0.5 + 0.5;
+                    explosion.fillStyle(0xff6600, intensity);
+                    explosion.fillCircle(250 + Math.sin(i) * 30, 150 + Math.cos(i) * 30, 15 + i * 2);
+                    
+                    explosion.fillStyle(0xff3300, intensity);
+                    explosion.fillCircle(240 + Math.cos(i) * 25, 140 + Math.sin(i) * 25, 10 + i);
                 }
             } else {
                 explosion.visible = false;
             }
 
-            // Двигаем облака
+            // Анимация облаков
             clouds.forEach((cloud, i) => {
-                cloud.x += 0.2;
-                if (cloud.x > 480) cloud.x = -50;
+                cloud.x += 0.3;
+                if (cloud.x > 500) cloud.x = -100;
             });
         }
 
-        // Шансы
+        // Функции игры
         function getCrashPoint() {
             const r = Math.random();
             if (r < 0.4) return 1.01 + Math.random() * 0.49;
@@ -334,25 +400,37 @@
         }
 
         function getSpeed() {
-            if (multiplier < 2) return 0.006;
-            if (multiplier < 5) return 0.012;
-            if (multiplier < 10) return 0.02;
-            if (multiplier < 20) return 0.03;
+            if (currentMultiplier < 2) return 0.006;
+            if (currentMultiplier < 5) return 0.012;
+            if (currentMultiplier < 10) return 0.02;
+            if (currentMultiplier < 20) return 0.03;
             return 0.05;
         }
 
         function addHistory(mult, win = null) {
             const item = document.createElement('div');
             item.className = 'history-item';
-            item.textContent = win ? `x${mult.toFixed(2)} · +${win}` : `x${mult.toFixed(2)} · 💥`;
+            if (win) item.classList.add('win');
+            if (mult >= 5) item.classList.add('bigwin');
+            
+            let text = `x${mult.toFixed(2)}`;
+            if (win) {
+                text += ` · +${win}`;
+                if (mult >= 5) text += ' 🎰';
+            } else {
+                text += ` · 💥`;
+            }
+            
+            item.textContent = text;
             historyContainer.prepend(item);
+            
             if (historyContainer.children.length > 20) {
                 historyContainer.removeChild(historyContainer.lastChild);
             }
         }
 
         function crash() {
-            clearInterval(gameTimer);
+            clearInterval(gameInterval);
             gameActive = false;
             playBtn.disabled = false;
             cashoutBtn.disabled = true;
@@ -361,29 +439,44 @@
 
         function cashOut() {
             if (!gameActive) return;
-            clearInterval(gameTimer);
+            clearInterval(gameInterval);
             gameActive = false;
             playBtn.disabled = false;
             cashoutBtn.disabled = true;
-            const win = Math.floor(currentBet * multiplier);
+            const win = Math.floor(currentBet * currentMultiplier);
             balance += win;
             balanceEl.innerText = balance;
-            addHistory(multiplier, win);
+            addHistory(currentMultiplier, win);
+            
+            if (tg) {
+                tg.sendData(JSON.stringify({
+                    action: 'win',
+                    multiplier: currentMultiplier,
+                    win: win,
+                    balance: balance
+                }));
+            }
         }
 
         function startGame() {
-            if (gameActive || balance < currentBet) return;
+            if (gameActive) return;
+            if (balance < currentBet) return;
+            
             balance -= currentBet;
             balanceEl.innerText = balance;
+            
             crashPoint = getCrashPoint();
-            multiplier = 1.0;
+            currentMultiplier = 1.0;
             gameActive = true;
+            
             playBtn.disabled = true;
             cashoutBtn.disabled = false;
             
-            gameTimer = setInterval(() => {
-                multiplier += getSpeed();
-                if (multiplier >= crashPoint) crash();
+            gameInterval = setInterval(() => {
+                currentMultiplier += getSpeed();
+                if (currentMultiplier >= crashPoint) {
+                    crash();
+                }
             }, 100);
         }
 
@@ -391,19 +484,29 @@
         document.querySelectorAll('.bet-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 if (gameActive) return;
+                
                 document.querySelectorAll('.bet-btn').forEach(b => b.classList.remove('selected'));
                 this.classList.add('selected');
-                currentBet = this.dataset.bet === 'all' ? balance : parseInt(this.dataset.bet);
+                
+                if (this.dataset.bet === 'all') {
+                    currentBet = balance;
+                } else {
+                    currentBet = parseInt(this.dataset.bet);
+                }
             });
         });
 
         playBtn.addEventListener('click', startGame);
         cashoutBtn.addEventListener('click', cashOut);
 
-        // Live counter
+        // Счётчик онлайн
         setInterval(() => {
-            liveCount += Math.random() > 0.5 ? Math.floor(Math.random() * 7) + 2 : -Math.floor(Math.random() * 5) - 2;
-            liveCount = Math.max(40, Math.min(300, liveCount));
+            const change = Math.floor(Math.random() * 7) + 2;
+            if (Math.random() > 0.5) {
+                liveCount += change;
+            } else {
+                liveCount = Math.max(40, liveCount - change);
+            }
             liveCountEl.innerText = liveCount;
         }, 7000);
     </script>
