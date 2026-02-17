@@ -3,29 +3,314 @@
 <head>
     <title>Aviator Test</title>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #0b1a2e, #1a3a4e);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .game-container {
+            max-width: 500px;
+            width: 100%;
+            background: rgba(0,0,0,0.5);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        h1 {
+            font-size: 2em;
+            margin-bottom: 5px;
+            color: gold;
+            text-shadow: 0 0 10px rgba(255,215,0,0.5);
+        }
+        .multiplier {
+            font-size: 5em;
+            font-weight: bold;
+            margin: 20px 0;
+            color: #00ff88;
+            text-shadow: 0 0 20px #00ff88;
+            transition: all 0.1s ease;
+        }
+        .plane {
+            font-size: 3em;
+            margin: 10px 0;
+            animation: fly 2s infinite alternate;
+        }
+        @keyframes fly {
+            from { transform: translateX(-10px); }
+            to { transform: translateX(10px); }
+        }
+        .balance {
+            font-size: 1.2em;
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .bet-btn {
+            background: #2c3e50;
+            color: white;
+            border: none;
+            padding: 12px 5px;
+            border-radius: 10px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .bet-btn:hover {
+            background: #34495e;
+        }
+        .bet-btn.selected {
+            background: gold;
+            color: black;
+            font-weight: bold;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .action-btn {
+            flex: 1;
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .action-btn:disabled {
+            background: #7f8c8d;
+            cursor: not-allowed;
+        }
+        .action-btn.cashout {
+            background: #f39c12;
+        }
+        .message {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .win {
+            background: #27ae60;
+        }
+        .lose {
+            background: #c0392b;
+        }
+        .history {
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #aaa;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 0.8em;
+            color: #666;
+        }
+    </style>
 </head>
 <body>
-    <h1 id="aviator-game">✈️ Aviator Game</h1>
-    <p>Добро пожаловать в мир авиации!</p>
-    <p>Введите текст для отправки:</p>
-    <textarea id="message" rows="10" cols="50"></textarea>
-    <br><br>
-    <button onclick="sendMessage()">Отправить в Telegram</button>
+    <div class="game-container">
+        <h1>✈️ AVIATOR TEST</h1>
+        
+        <div class="multiplier" id="multiplier">1.00x</div>
+        
+        <div class="plane" id="plane">✈️</div>
+        
+        <div class="balance" id="balance">
+            💰 Balans: <span id="balance-value">1000</span> żetonów
+        </div>
+        
+        <div class="buttons" id="bet-buttons">
+            <button class="bet-btn" data-bet="10">10</button>
+            <button class="bet-btn" data-bet="50">50</button>
+            <button class="bet-btn" data-bet="100">100</button>
+            <button class="bet-btn" data-bet="all">ALL IN</button>
+        </div>
+        
+        <div class="action-buttons">
+            <button class="action-btn" id="play-btn" onclick="startGame()">🎮 GRAJ</button>
+            <button class="action-btn cashout" id="cashout-btn" onclick="cashOut()" disabled>🛬 ZABIERZ</button>
+        </div>
+        
+        <div id="message-area"></div>
+        
+        <div class="history" id="history">
+            📜 Historia: -
+        </div>
+        
+        <div class="footer">
+            Gra testowa | Wkrótce prawdziwe bonusy!
+        </div>
+    </div>
 
     <script>
         let tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
-
-        function sendMessage() {
-            let text = document.getElementById("message").value;
-            if (text) {
-                tg.sendData(text); // Отправляет данные в бота
-            } else {
-                alert("Введите текст!");
+        
+        // Игровые переменные
+        let balance = 1000;
+        let currentBet = 10;
+        let gameActive = false;
+        let gameInterval;
+        let multiplier = 1.0;
+        let crashPoint = 0;
+        let history = [];
+        
+        // Элементы DOM
+        const multiplierEl = document.getElementById('multiplier');
+        const balanceEl = document.getElementById('balance-value');
+        const playBtn = document.getElementById('play-btn');
+        const cashoutBtn = document.getElementById('cashout-btn');
+        const messageArea = document.getElementById('message-area');
+        const historyEl = document.getElementById('history');
+        const betButtons = document.querySelectorAll('.bet-btn');
+        
+        // Выбор ставки
+        betButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (gameActive) return;
+                
+                betButtons.forEach(b => b.classList.remove('selected'));
+                this.classList.add('selected');
+                
+                if (this.dataset.bet === 'all') {
+                    currentBet = balance;
+                } else {
+                    currentBet = parseInt(this.dataset.bet);
+                }
+            });
+        });
+        
+        // Функция старта игры
+        function startGame() {
+            if (gameActive) return;
+            if (balance < currentBet) {
+                showMessage('❌ Nie masz tyle żetonów!', 'lose');
+                return;
             }
+            
+            // Снимаем ставку
+            balance -= currentBet;
+            updateBalance();
+            
+            // Генерируем точку краша (от 1.1 до 10.0)
+            crashPoint = 1.1 + Math.random() * 8.9;
+            multiplier = 1.0;
+            gameActive = true;
+            
+            playBtn.disabled = true;
+            cashoutBtn.disabled = false;
+            
+            // Запускаем рост множителя
+            gameInterval = setInterval(() => {
+                multiplier += 0.01;
+                multiplierEl.textContent = multiplier.toFixed(2) + 'x';
+                
+                // Проверяем краш
+                if (multiplier >= crashPoint) {
+                    crash();
+                }
+            }, 100);
         }
+        
+        // Функция вывода денег
+        function cashOut() {
+            if (!gameActive) return;
+            
+            clearInterval(gameInterval);
+            
+            // Рассчитываем выигрыш
+            let winAmount = Math.floor(currentBet * multiplier);
+            balance += winAmount;
+            
+            showMessage(`✅ Wygrana! +${winAmount} żetonów (x${multiplier.toFixed(2)})`, 'win');
+            
+            // Добавляем в историю
+            history.unshift(`x${multiplier.toFixed(2)}`);
+            if (history.length > 5) history.pop();
+            updateHistory();
+            
+            gameActive = false;
+            playBtn.disabled = false;
+            cashoutBtn.disabled = true;
+            updateBalance();
+            multiplierEl.textContent = '1.00x';
+            
+            // Отправляем результат в бота
+            tg.sendData(JSON.stringify({
+                action: 'win',
+                multiplier: multiplier.toFixed(2),
+                win: winAmount,
+                balance: balance
+            }));
+        }
+        
+        // Функция краша
+        function crash() {
+            clearInterval(gameInterval);
+            
+            showMessage(`💥 KRAKS! Straciłeś ${currentBet} żetonów`, 'lose');
+            
+            // Добавляем в историю
+            history.unshift(`💥 x${crashPoint.toFixed(2)}`);
+            if (history.length > 5) history.pop();
+            updateHistory();
+            
+            gameActive = false;
+            playBtn.disabled = false;
+            cashoutBtn.disabled = true;
+            multiplierEl.textContent = '1.00x';
+            
+            // Отправляем результат в бота
+            tg.sendData(JSON.stringify({
+                action: 'crash',
+                crash: crashPoint.toFixed(2),
+                loss: currentBet,
+                balance: balance
+            }));
+        }
+        
+        // Обновление баланса
+        function updateBalance() {
+            balanceEl.textContent = balance;
+        }
+        
+        // Показ сообщений
+        function showMessage(text, type) {
+            messageArea.innerHTML = `<div class="message ${type}">${text}</div>`;
+            setTimeout(() => {
+                messageArea.innerHTML = '';
+            }, 3000);
+        }
+        
+        // Обновление истории
+        function updateHistory() {
+            historyEl.innerHTML = '📜 Historia: ' + history.join(' | ');
+        }
+        
+        // Инициализация
+        updateBalance();
     </script>
 </body>
 </html>
