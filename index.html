@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AirCas ✈️</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
@@ -19,115 +19,83 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 16px;
+            padding: 12px;
         }
 
         .game-card {
             max-width: 480px;
             width: 100%;
-            background: rgba(18, 28, 40, 0.75);
+            background: rgba(18, 28, 40, 0.85);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 215, 0, 0.15);
-            border-radius: 40px;
-            padding: 24px 20px 32px;
-            box-shadow: 0 30px 50px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 215, 0, 0.1) inset;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 32px;
+            padding: 20px 16px 24px;
+            box-shadow: 0 30px 50px rgba(0, 0, 0, 0.7);
         }
 
         h1 {
-            font-size: 32px;
+            font-size: 28px;
             font-weight: 700;
             letter-spacing: 2px;
             text-align: center;
-            background: linear-gradient(135deg, #f5e7a6, #e4c580, #f5e7a6);
+            background: linear-gradient(135deg, #f5e7a6, #e4c580);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
             margin-bottom: 8px;
-            text-shadow: 0 0 10px #ffd70080;
         }
 
-        .multiplier-box {
-            background: #0e1a24;
-            border-radius: 48px;
-            padding: 24px 16px;
-            margin: 20px 0 16px;
-            border: 1px solid #2a3a48;
-            box-shadow: inset 0 5px 10px rgba(0,0,0,0.6), 0 10px 20px rgba(0,0,0,0.5);
+        .canvas-container {
             position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: linear-gradient(180deg, #1e3b4a, #0f2835);
+            border-radius: 24px;
             overflow: hidden;
+            margin-bottom: 16px;
+            border: 1px solid #3f5567;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
         }
 
-        .multiplier {
-            font-size: 80px;
+        #gameCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .multiplier-overlay {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px 20px;
+            border-radius: 40px;
+            border: 1px solid #ffd966;
+            box-shadow: 0 0 20px #ffd96655;
+            z-index: 10;
+        }
+
+        .multiplier-text {
+            font-size: 32px;
             font-weight: 800;
-            text-align: center;
-            line-height: 1;
-            background: linear-gradient(180deg, #fff9e6, #ffd966);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-shadow: 0 0 30px #ffb347;
-            position: relative;
-            z-index: 2;
-        }
-
-        .win-animation {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: radial-gradient(circle at center, rgba(255,215,0,0.3) 0%, transparent 70%);
-            animation: winPulse 2s ease-out;
-            z-index: 1;
-        }
-
-        @keyframes winPulse {
-            0% { opacity: 0; transform: scale(0.8); }
-            50% { opacity: 1; transform: scale(1.2); }
-            100% { opacity: 0; transform: scale(1.5); }
-        }
-
-        .plane-container {
-            position: relative;
-            height: 80px;
-            margin: 10px 0 20px;
-            overflow: visible;
-        }
-
-        .plane-emoji {
-            font-size: 48px;
-            position: absolute;
-            left: 0;
-            filter: drop-shadow(0 0 12px #7ec8ff);
-            transition: left 0.1s linear;
+            color: #ffd966;
+            text-shadow: 0 0 10px #ffb347;
         }
 
         .balance-panel {
             background: linear-gradient(145deg, #1e2c3a, #14222e);
             border-radius: 40px;
-            padding: 16px 20px;
+            padding: 12px 16px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             border: 1px solid #3f5567;
-            margin: 20px 0;
-            font-weight: 600;
+            margin: 16px 0;
             color: #fff;
-            box-shadow: inset 0 2px 5px #00000055;
-        }
-
-        .balance-label {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 16px;
-            color: #abb9c7;
         }
 
         .balance-value {
-            font-size: 24px;
+            font-size: 22px;
             background: #0d1c28;
             padding: 6px 20px;
             border-radius: 40px;
@@ -139,20 +107,19 @@
         .bet-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            margin-bottom: 24px;
+            gap: 8px;
+            margin-bottom: 16px;
         }
 
         .bet-btn {
             background: #253442;
             border: 1px solid #3b4e5e;
             color: white;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 600;
-            padding: 14px 0;
+            padding: 12px 0;
             border-radius: 30px;
-            transition: 0.2s;
-            box-shadow: 0 5px 0 #0f171f;
+            box-shadow: 0 4px 0 #0f171f;
             cursor: pointer;
         }
 
@@ -160,27 +127,25 @@
             background: linear-gradient(145deg, #f5b042, #e08e1a);
             border-color: #ffc107;
             color: #0b0f15;
-            box-shadow: 0 5px 0 #9e621b, 0 0 15px #ffb347;
+            box-shadow: 0 4px 0 #9e621b, 0 0 15px #ffb347;
         }
 
         .action-row {
             display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
+            gap: 10px;
+            margin-bottom: 16px;
         }
 
         .action-btn {
             flex: 1;
-            padding: 18px 0;
+            padding: 14px 0;
             border: none;
             border-radius: 40px;
             font-weight: 700;
-            font-size: 20px;
+            font-size: 18px;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: 0.15s;
             cursor: pointer;
-            box-shadow: 0 6px 0 #0f1a20;
+            box-shadow: 0 4px 0 #0f1a20;
         }
 
         .play-btn {
@@ -190,7 +155,6 @@
 
         .play-btn:disabled {
             opacity: 0.5;
-            box-shadow: none;
             cursor: not-allowed;
         }
 
@@ -201,117 +165,69 @@
 
         .cashout-btn:disabled {
             opacity: 0.5;
-            box-shadow: none;
             cursor: not-allowed;
         }
 
-        .message-box {
-            min-height: 56px;
-            margin: 12px 0;
-            font-weight: 500;
-            text-align: center;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .win-message {
-            background: #1d6330cc;
-            border-radius: 60px;
-            padding: 12px 24px;
-            color: #d4ffb0;
-            border: 1px solid #9bff7a;
-            backdrop-filter: blur(4px);
-            font-weight: bold;
-        }
-
-        .bigwin-message {
-            background: linear-gradient(145deg, #4a1d63cc, #2a0f3acc);
-            border-radius: 60px;
-            padding: 12px 24px;
-            color: #ffb0ff;
-            border: 1px solid #ff7aff;
-            backdrop-filter: blur(4px);
-            font-size: 18px;
-            font-weight: bold;
-            animation: bigwinPulse 1s infinite;
-        }
-
-        @keyframes bigwinPulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
-        .superwin-message {
-            background: linear-gradient(145deg, #b8860bcc, #8b4513cc);
-            border-radius: 60px;
-            padding: 12px 24px;
-            color: #fff0b0;
-            border: 1px solid #ffd700;
-            backdrop-filter: blur(4px);
-            font-size: 20px;
-            font-weight: bold;
-            animation: superwinPulse 0.7s infinite;
-        }
-
-        @keyframes superwinPulse {
-            0% { transform: scale(1); text-shadow: 0 0 5px gold; }
-            50% { transform: scale(1.1); text-shadow: 0 0 20px gold; }
-            100% { transform: scale(1); text-shadow: 0 0 5px gold; }
-        }
-
-        .grandwin-message {
-            background: linear-gradient(145deg, #daa520cc, #b8860bcc);
-            border-radius: 60px;
-            padding: 12px 24px;
-            color: #ffffff;
-            border: 1px solid #ffff00;
-            backdrop-filter: blur(4px);
-            font-size: 22px;
-            font-weight: bold;
-            animation: grandwinPulse 0.5s infinite;
-            box-shadow: 0 0 30px gold;
-        }
-
-        @keyframes grandwinPulse {
-            0% { transform: scale(1); background: #daa520cc; }
-            50% { transform: scale(1.15); background: #ffd700cc; }
-            100% { transform: scale(1); background: #daa520cc; }
-        }
-
-        .lose-message {
-            background: #7a2828cc;
-            border-radius: 60px;
-            padding: 12px 24px;
-            color: #ffb0b0;
-            border: 1px solid #ff7a7a;
-            backdrop-filter: blur(4px);
-        }
-
-        .history-bar {
+        .history-container {
             background: #0f1c26;
-            border-radius: 60px;
-            padding: 12px 18px;
-            color: #c0d2e0;
-            font-size: 15px;
-            text-align: center;
+            border-radius: 16px;
+            padding: 8px;
             border: 1px solid #2b4455;
             margin: 16px 0 8px;
+            max-height: 120px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #ffd966 #1a2c38;
+        }
+
+        .history-container::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .history-container::-webkit-scrollbar-track {
+            background: #1a2c38;
+        }
+
+        .history-container::-webkit-scrollbar-thumb {
+            background: #ffd966;
+            border-radius: 4px;
+        }
+
+        .history-item {
+            padding: 6px 10px;
+            margin: 2px 0;
+            border-radius: 8px;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            background: #1a2c38;
+            color: #c0d2e0;
+        }
+
+        .history-item.bigwin {
+            background: #4a1d63;
+            color: #ffb0ff;
+        }
+
+        .history-item.superwin {
+            background: #b8860b;
+            color: #fff0b0;
+        }
+
+        .history-item.grandwin {
+            background: #daa520;
+            color: #000;
+            font-weight: bold;
         }
 
         .live-counter {
-            background: #1a2c38;
-            border-radius: 40px;
-            padding: 8px 16px;
-            display: inline-flex;
+            display: flex;
             align-items: center;
+            justify-content: center;
             gap: 6px;
             color: #7ec8ff;
             font-size: 14px;
-            border: 1px solid #2a4a5a;
-            margin-top: 16px;
+            margin-top: 12px;
         }
 
         .live-dot {
@@ -328,15 +244,11 @@
             100% { opacity: 1; }
         }
 
-        .footer-note {
-            color: #516b7c;
-            font-size: 13px;
+        .message-box {
+            min-height: 40px;
+            margin: 8px 0;
             text-align: center;
-            margin-top: 24px;
-        }
-
-        .footer-note span {
-            color: #ffd966;
+            font-size: 14px;
         }
     </style>
 </head>
@@ -344,16 +256,15 @@
     <div class="game-card">
         <h1>✈️ AirCas</h1>
 
-        <div class="multiplier-box" id="multiplierBox">
-            <div class="multiplier" id="multiplier">1.00x</div>
-        </div>
-
-        <div class="plane-container" id="planeContainer">
-            <div class="plane-emoji" id="plane">✈️</div>
+        <div class="canvas-container">
+            <canvas id="gameCanvas"></canvas>
+            <div class="multiplier-overlay">
+                <span class="multiplier-text" id="multiplier">1.00x</span>
+            </div>
         </div>
 
         <div class="balance-panel">
-            <span class="balance-label">💰 Twój balans</span>
+            <span>💰 Twój balans</span>
             <span class="balance-value" id="balance-value">1000</span>
         </div>
 
@@ -371,19 +282,13 @@
 
         <div class="message-box" id="message-area"></div>
 
-        <div class="history-bar" id="history">
-            📍 Historia: —
+        <div class="history-container" id="historyContainer">
+            <!-- История будет добавляться сюда -->
         </div>
 
-        <div style="display: flex; justify-content: center;">
-            <div class="live-counter">
-                <span class="live-dot"></span>
-                <span id="liveCount">128</span> graczy online
-            </div>
-        </div>
-
-        <div class="footer-note">
-            ⚡ <span>gra testowa</span> · wkrótce nagrody
+        <div class="live-counter">
+            <span class="live-dot"></span>
+            <span id="liveCount">128</span> graczy online
         </div>
     </div>
 
@@ -392,111 +297,192 @@
         tg.ready();
         tg.expand();
 
-        // Stan gry
+        // ========== ИГРОВЫЕ ПЕРЕМЕННЫЕ ==========
         let balance = 1000;
         let currentBet = 10;
         let gameActive = false;
         let multiplier = 1.0;
         let crashPoint = 0;
         let gameInterval = null;
-        let history = [];
         let liveCount = 128;
+        let history = [];
 
-        // Elementy DOM
+        // Canvas
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Позиция самолёта (0-1, где 1 = правый край)
+        let planeX = 0;
+
+        // ========== ЭЛЕМЕНТЫ DOM ==========
         const multiplierEl = document.getElementById('multiplier');
-        const multiplierBox = document.getElementById('multiplierBox');
         const balanceEl = document.getElementById('balance-value');
         const playBtn = document.getElementById('play-btn');
         const cashoutBtn = document.getElementById('cashout-btn');
         const messageArea = document.getElementById('message-area');
-        const historyEl = document.getElementById('history');
+        const historyContainer = document.getElementById('historyContainer');
         const betButtons = document.querySelectorAll('.bet-btn');
-        const plane = document.getElementById('plane');
-        const planeContainer = document.getElementById('planeContainer');
         const liveCountEl = document.getElementById('liveCount');
 
-        // Симуляция живого счётчика
-        setInterval(() => {
-            // Меняем на +/- 2-8 человек каждые 5-10 секунд
-            const change = Math.floor(Math.random() * 7) + 2;
-            if (Math.random() > 0.5) {
-                liveCount += change;
-            } else {
-                liveCount = Math.max(40, liveCount - change);
-            }
-            liveCountEl.innerText = liveCount;
-        }, 5000 + Math.random() * 5000);
+        // ========== НАСТРОЙКИ КАНВАСА ==========
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
 
-        // Реальные шансы краша (распределение как в казино)
+        // ========== ОТРИСОВКА ==========
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Небо с градиентом
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#1e3b4a');
+            gradient.addColorStop(1, '#0f2835');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Облака (декоративные)
+            ctx.fillStyle = 'rgba(255,255,255,0.1)';
+            for (let i = 0; i < 5; i++) {
+                ctx.beginPath();
+                ctx.arc(canvas.width * (i * 0.2 + 0.1), canvas.height * 0.3, 30, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // След самолёта (пунктир)
+            if (planeX > 0.1) {
+                ctx.beginPath();
+                ctx.setLineDash([5, 5]);
+                ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+                ctx.lineWidth = 2;
+                ctx.moveTo(20, canvas.height * 0.5);
+                ctx.lineTo(planeX * canvas.width - 20, canvas.height * 0.5 - 10);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            // Самолёт
+            const planeY = canvas.height * 0.5 - 10;
+            const planeScreenX = Math.min(planeX * canvas.width, canvas.width - 40);
+            
+            ctx.save();
+            ctx.translate(planeScreenX, planeY);
+            
+            // Тень
+            ctx.shadowColor = '#ffd966';
+            ctx.shadowBlur = 15;
+            
+            // Корпус
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.moveTo(0, -8);
+            ctx.lineTo(30, 0);
+            ctx.lineTo(0, 8);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Крылья
+            ctx.fillStyle = '#ff6b6b';
+            ctx.fillRect(10, -12, 8, 4);
+            ctx.fillRect(10, 8, 8, 4);
+            
+            // Хвост
+            ctx.fillStyle = '#4a90e2';
+            ctx.beginPath();
+            ctx.moveTo(-5, -5);
+            ctx.lineTo(-15, -10);
+            ctx.lineTo(-15, 0);
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.restore();
+
+            // Взрыв при краше
+            if (!gameActive && crashPoint > 0 && multiplier >= crashPoint) {
+                ctx.save();
+                ctx.translate(planeScreenX, planeY);
+                ctx.shadowColor = '#ff4444';
+                ctx.shadowBlur = 30;
+                ctx.fillStyle = '#ff4444';
+                ctx.beginPath();
+                ctx.arc(0, 0, 30 + Math.random() * 10, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // ========== РЕАЛЬНЫЕ ШАНСЫ ==========
         function getCrashPoint() {
             const r = Math.random();
-            // Распределение: 60% краш до 2x, 25% до 5x, 10% до 10x, 5% выше
-            if (r < 0.6) {
-                return 1.1 + Math.random() * 0.9; // 1.1 - 2.0
-            } else if (r < 0.85) {
-                return 2.0 + Math.random() * 3.0; // 2.0 - 5.0
-            } else if (r < 0.95) {
-                return 5.0 + Math.random() * 5.0; // 5.0 - 10.0
-            } else {
-                return 10.0 + Math.random() * 40.0; // 10.0 - 50.0
-            }
+            // 40% до 1.5x
+            if (r < 0.4) return 1.01 + Math.random() * 0.49;
+            // 30% до 2.5x
+            if (r < 0.7) return 1.5 + Math.random() * 1.0;
+            // 15% до 5x
+            if (r < 0.85) return 2.5 + Math.random() * 2.5;
+            // 10% до 10x
+            if (r < 0.95) return 5.0 + Math.random() * 5.0;
+            // 4% до 20x
+            if (r < 0.99) return 10.0 + Math.random() * 10.0;
+            // 1% выше 20x
+            return 20.0 + Math.random() * 30.0;
         }
 
-        // Динамическая скорость роста
+        // ========== СКОРОСТЬ РОСТА ==========
         function getSpeed() {
-            if (multiplier < 2) return 0.008;
-            if (multiplier < 5) return 0.015;
-            if (multiplier < 10) return 0.025;
-            if (multiplier < 20) return 0.04;
-            return 0.06;
+            if (multiplier < 2) return 0.006;
+            if (multiplier < 5) return 0.012;
+            if (multiplier < 10) return 0.02;
+            if (multiplier < 20) return 0.03;
+            return 0.05;
         }
 
-        // Анимация самолёта
-        function updatePlanePosition() {
-            if (!gameActive) return;
-            const containerWidth = planeContainer.offsetWidth - 60;
-            const progress = Math.min(multiplier / 30, 1); // Максимум до 30x
-            const left = progress * containerWidth;
-            plane.style.left = left + 'px';
-        }
-
-        // Показать анимацию выигрыша
-        function showWinAnimation(mult) {
-            const anim = document.createElement('div');
-            anim.className = 'win-animation';
-            multiplierBox.appendChild(anim);
-            setTimeout(() => anim.remove(), 2000);
-        }
-
-        // Определить тип выигрыша
-        function getWinType(mult) {
-            if (mult >= 20) return 'GRAND WIN!';
-            if (mult >= 10) return 'SUPER WIN!';
-            if (mult >= 5) return 'BIG WIN!';
-            return 'WIN!';
-        }
-
-        // Показать сообщение с учётом типа выигрыша
-        function showWinMessage(text, mult) {
-            let className = 'win-message';
-            let displayText = text;
+        // ========== ОБНОВЛЕНИЕ ИСТОРИИ ==========
+        function addHistoryItem(mult, win = null, type = 'normal') {
+            const item = document.createElement('div');
+            item.className = 'history-item';
             
-            if (mult >= 20) {
-                className = 'grandwin-message';
-                displayText = `🏆 GRAND WIN! x${mult.toFixed(2)} 🏆`;
-            } else if (mult >= 10) {
-                className = 'superwin-message';
-                displayText = `⭐ SUPER WIN! x${mult.toFixed(2)} ⭐`;
-            } else if (mult >= 5) {
-                className = 'bigwin-message';
-                displayText = `🎰 BIG WIN! x${mult.toFixed(2)} 🎰`;
+            if (type === 'bigwin') item.classList.add('bigwin');
+            if (type === 'superwin') item.classList.add('superwin');
+            if (type === 'grandwin') item.classList.add('grandwin');
+            
+            let text = `x${mult.toFixed(2)}`;
+            if (win !== null) {
+                text += ` · +${win}`;
+                if (type === 'bigwin') text += ' 🎰';
+                if (type === 'superwin') text += ' ⭐';
+                if (type === 'grandwin') text += ' 🏆';
+            } else {
+                text += ` · 💥`;
             }
             
-            messageArea.innerHTML = `<div class="${className}">${displayText}</div>`;
-            setTimeout(() => messageArea.innerHTML = '', 3000);
+            item.textContent = text;
+            historyContainer.prepend(item);
+            
+            // Ограничим историю 20 элементами
+            if (historyContainer.children.length > 20) {
+                historyContainer.removeChild(historyContainer.lastChild);
+            }
         }
 
-        // Wybór stawki
+        // ========== ТИП ВЫИГРЫША ==========
+        function getWinType(mult) {
+            if (mult >= 20) return 'grandwin';
+            if (mult >= 10) return 'superwin';
+            if (mult >= 5) return 'bigwin';
+            return 'normal';
+        }
+
+        // ========== ПОКАЗ СООБЩЕНИЯ ==========
+        function showMessage(text, type) {
+            messageArea.innerHTML = `<div style="color: ${type === 'win' ? '#4caf50' : '#f44336'}">${text}</div>`;
+            setTimeout(() => messageArea.innerHTML = '', 2000);
+        }
+
+        // ========== ВЫБОР СТАВКИ ==========
         betButtons.forEach(btn => {
             btn.addEventListener('click', function() {
                 if (gameActive) return;
@@ -512,35 +498,25 @@
             });
         });
 
-        // Aktualizacja salda
+        // ========== ОБНОВЛЕНИЕ БАЛАНСА ==========
         function updateBalance() {
             balanceEl.innerText = balance;
         }
 
-        // Aktualizacja historii
-        function updateHistory() {
-            if (history.length === 0) {
-                historyEl.innerHTML = '📍 Historia: —';
-            } else {
-                historyEl.innerHTML = '📍 ' + history.slice(0, 8).join(' · ');
-            }
-        }
-
-        // Crash
+        // ========== CRASH ==========
         function crash() {
             clearInterval(gameInterval);
             gameActive = false;
             playBtn.disabled = false;
             cashoutBtn.disabled = true;
             
-            showMessage(`💥 KRAKS! Straciłeś ${currentBet} żetonów`, 'lose');
+            showMessage(`💥 KRAKS! Straciłeś ${currentBet}`, 'lose');
+            addHistoryItem(crashPoint, null);
             
-            history.unshift(`💥${crashPoint.toFixed(2)}x`);
-            if (history.length > 10) history.pop();
-            updateHistory();
-            
+            multiplier = 1.0;
             multiplierEl.innerText = '1.00x';
-            plane.style.left = '0px';
+            planeX = 0;
+            draw();
 
             tg.sendData(JSON.stringify({
                 action: 'crash',
@@ -550,7 +526,7 @@
             }));
         }
 
-        // Wypłata
+        // ========== WYPŁATA ==========
         function cashOut() {
             if (!gameActive) return;
 
@@ -563,15 +539,14 @@
             balance += win;
             updateBalance();
 
-            showWinMessage(`✅ +${win}`, multiplier);
-            showWinAnimation(multiplier);
+            const winType = getWinType(multiplier);
+            showMessage(`✅ WYGRANA! +${win} (${multiplier.toFixed(2)}x)`, 'win');
+            addHistoryItem(multiplier, win, winType);
             
-            history.unshift(`✅${multiplier.toFixed(2)}x`);
-            if (history.length > 10) history.pop();
-            updateHistory();
-            
+            multiplier = 1.0;
             multiplierEl.innerText = '1.00x';
-            plane.style.left = '0px';
+            planeX = 0;
+            draw();
 
             tg.sendData(JSON.stringify({
                 action: 'win',
@@ -581,7 +556,7 @@
             }));
         }
 
-        // Start gry
+        // ========== START ==========
         function startGame() {
             if (gameActive) return;
             if (balance < currentBet) {
@@ -594,17 +569,18 @@
 
             crashPoint = getCrashPoint();
             multiplier = 1.0;
+            planeX = 0;
             gameActive = true;
 
             playBtn.disabled = true;
             cashoutBtn.disabled = false;
 
-            plane.style.left = '0px';
-
             gameInterval = setInterval(() => {
                 multiplier += getSpeed();
                 multiplierEl.innerText = multiplier.toFixed(2) + 'x';
-                updatePlanePosition();
+                
+                planeX = Math.min(multiplier / 20, 0.95);
+                draw();
 
                 if (multiplier >= crashPoint) {
                     crash();
@@ -612,15 +588,28 @@
             }, 100);
         }
 
-        // Pokazanie wiadomości (dla zwykłych)
-        function showMessage(text, type) {
-            messageArea.innerHTML = `<div class="${type}-message">${text}</div>`;
-            setTimeout(() => messageArea.innerHTML = '', 2800);
-        }
+        // ========== СЧЁТЧИК LIVE ==========
+        setInterval(() => {
+            const change = Math.floor(Math.random() * 7) + 2;
+            if (Math.random() > 0.5) {
+                liveCount += change;
+            } else {
+                liveCount = Math.max(40, liveCount - change);
+            }
+            liveCountEl.innerText = liveCount;
+        }, 7000);
 
-        // Pierwsze ustawienie
+        // ========== ИНИЦИАЛИЗАЦИЯ ==========
         updateBalance();
-        betButtons[0].classList.add('selected'); // domyślnie 10
+        betButtons[0].classList.add('selected');
+        draw();
+
+        // Анимация
+        function animate() {
+            if (!gameActive) draw();
+            requestAnimationFrame(animate);
+        }
+        animate();
     </script>
 </body>
 </html>
