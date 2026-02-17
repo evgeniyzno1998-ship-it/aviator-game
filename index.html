@@ -1,183 +1,292 @@
 <!DOCTYPE html>
-<html>
+<html lang="pl">
 <head>
-    <title>Aviator Test</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aviator Casino</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: linear-gradient(135deg, #0b1a2e, #1a3a4e);
-            color: white;
-            text-align: center;
-            padding: 20px;
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
             min-height: 100vh;
+            background: radial-gradient(circle at 20% 30%, #1a2f3f, #0b1219);
             display: flex;
-            flex-direction: column;
             align-items: center;
+            justify-content: center;
+            padding: 16px;
         }
-        .game-container {
-            max-width: 500px;
+
+        .game-card {
+            max-width: 480px;
             width: 100%;
-            background: rgba(0,0,0,0.5);
-            border-radius: 20px;
-            padding: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            background: rgba(18, 28, 40, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 215, 0, 0.15);
+            border-radius: 40px;
+            padding: 24px 20px 32px;
+            box-shadow: 0 30px 50px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 215, 0, 0.1) inset;
         }
+
         h1 {
-            font-size: 2em;
-            margin-bottom: 5px;
-            color: gold;
-            text-shadow: 0 0 10px rgba(255,215,0,0.5);
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-align: center;
+            background: linear-gradient(135deg, #f5e7a6, #e4c580, #f5e7a6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            text-shadow: 0 0 10px #ffd70080;
         }
+
+        .multiplier-box {
+            background: #0e1a24;
+            border-radius: 48px;
+            padding: 24px 16px;
+            margin: 20px 0 16px;
+            border: 1px solid #2a3a48;
+            box-shadow: inset 0 5px 10px rgba(0,0,0,0.6), 0 10px 20px rgba(0,0,0,0.5);
+        }
+
         .multiplier {
-            font-size: 5em;
-            font-weight: bold;
-            margin: 20px 0;
-            color: #00ff88;
-            text-shadow: 0 0 20px #00ff88;
-            transition: all 0.1s ease;
+            font-size: 80px;
+            font-weight: 800;
+            text-align: center;
+            line-height: 1;
+            background: linear-gradient(180deg, #fff9e6, #ffd966);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px #ffb347;
         }
-        .plane {
-            font-size: 3em;
-            margin: 10px 0;
-            animation: fly 2s infinite alternate;
+
+        .plane-emoji {
+            font-size: 56px;
+            text-align: center;
+            filter: drop-shadow(0 0 12px #7ec8ff);
+            animation: fly 2.2s infinite alternate ease-in-out;
+            margin: -10px 0 10px;
         }
+
         @keyframes fly {
-            from { transform: translateX(-10px); }
-            to { transform: translateX(10px); }
+            0% { transform: translateX(-12px) rotate(-5deg); }
+            100% { transform: translateX(12px) rotate(5deg); }
         }
-        .balance {
-            font-size: 1.2em;
-            background: rgba(255,255,255,0.1);
-            padding: 10px;
-            border-radius: 10px;
+
+        .balance-panel {
+            background: linear-gradient(145deg, #1e2c3a, #14222e);
+            border-radius: 40px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid #3f5567;
             margin: 20px 0;
+            font-weight: 600;
+            color: #fff;
+            box-shadow: inset 0 2px 5px #00000055;
         }
-        .buttons {
+
+        .balance-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 16px;
+            color: #abb9c7;
+        }
+
+        .balance-value {
+            font-size: 24px;
+            background: #0d1c28;
+            padding: 6px 20px;
+            border-radius: 40px;
+            color: #ffd966;
+            border: 1px solid #ffd96655;
+            font-weight: 700;
+        }
+
+        .bet-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 10px;
-            margin: 20px 0;
+            margin-bottom: 24px;
         }
+
         .bet-btn {
-            background: #2c3e50;
+            background: #253442;
+            border: 1px solid #3b4e5e;
             color: white;
-            border: none;
-            padding: 12px 5px;
-            border-radius: 10px;
-            font-size: 1em;
+            font-size: 18px;
+            font-weight: 600;
+            padding: 14px 0;
+            border-radius: 30px;
+            transition: 0.2s;
+            box-shadow: 0 5px 0 #0f171f;
             cursor: pointer;
-            transition: 0.3s;
         }
-        .bet-btn:hover {
-            background: #34495e;
-        }
+
         .bet-btn.selected {
-            background: gold;
-            color: black;
-            font-weight: bold;
+            background: linear-gradient(145deg, #f5b042, #e08e1a);
+            border-color: #ffc107;
+            color: #0b0f15;
+            box-shadow: 0 5px 0 #9e621b, 0 0 15px #ffb347;
         }
-        .action-buttons {
+
+        .action-row {
             display: flex;
-            gap: 10px;
-            margin: 20px 0;
+            gap: 12px;
+            margin-bottom: 20px;
         }
+
         .action-btn {
             flex: 1;
-            background: #27ae60;
-            color: white;
+            padding: 18px 0;
             border: none;
-            padding: 15px;
-            border-radius: 10px;
-            font-size: 1.2em;
-            font-weight: bold;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.15s;
             cursor: pointer;
-            transition: 0.3s;
+            box-shadow: 0 6px 0 #0f1a20;
         }
-        .action-btn:disabled {
-            background: #7f8c8d;
+
+        .play-btn {
+            background: linear-gradient(145deg, #1f8b4c, #0f6e3a);
+            color: white;
+        }
+
+        .play-btn:disabled {
+            opacity: 0.5;
+            box-shadow: none;
             cursor: not-allowed;
         }
-        .action-btn.cashout {
-            background: #f39c12;
+
+        .cashout-btn {
+            background: linear-gradient(145deg, #cc7b2b, #b35f1a);
+            color: white;
         }
-        .message {
-            padding: 15px;
-            border-radius: 10px;
-            margin: 10px 0;
-            font-weight: bold;
+
+        .cashout-btn:disabled {
+            opacity: 0.5;
+            box-shadow: none;
+            cursor: not-allowed;
         }
-        .win {
-            background: #27ae60;
+
+        .message-box {
+            min-height: 56px;
+            margin: 12px 0;
+            font-weight: 500;
+            text-align: center;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .lose {
-            background: #c0392b;
+
+        .win-message {
+            background: #1d6330cc;
+            border-radius: 60px;
+            padding: 12px 24px;
+            color: #d4ffb0;
+            border: 1px solid #9bff7a;
+            backdrop-filter: blur(4px);
         }
-        .history {
-            margin-top: 20px;
-            font-size: 0.9em;
-            color: #aaa;
+
+        .lose-message {
+            background: #7a2828cc;
+            border-radius: 60px;
+            padding: 12px 24px;
+            color: #ffb0b0;
+            border: 1px solid #ff7a7a;
+            backdrop-filter: blur(4px);
         }
-        .footer {
-            margin-top: 20px;
-            font-size: 0.8em;
-            color: #666;
+
+        .history-bar {
+            background: #0f1c26;
+            border-radius: 60px;
+            padding: 12px 18px;
+            color: #c0d2e0;
+            font-size: 15px;
+            text-align: center;
+            border: 1px solid #2b4455;
+            margin: 16px 0 8px;
+        }
+
+        .footer-note {
+            color: #516b7c;
+            font-size: 13px;
+            text-align: center;
+            margin-top: 24px;
+        }
+
+        .footer-note span {
+            color: #ffd966;
         }
     </style>
 </head>
 <body>
-    <div class="game-container">
-        <h1>✈️ AVIATOR TEST</h1>
-        
-        <div class="multiplier" id="multiplier">1.00x</div>
-        
-        <div class="plane" id="plane">✈️</div>
-        
-        <div class="balance" id="balance">
-            💰 Balans: <span id="balance-value">1000</span> żetonów
+    <div class="game-card">
+        <h1>✈️ AVIATOR</h1>
+
+        <div class="multiplier-box">
+            <div class="multiplier" id="multiplier">1.00x</div>
         </div>
-        
-        <div class="buttons" id="bet-buttons">
+
+        <div class="plane-emoji" id="plane">✈️</div>
+
+        <div class="balance-panel">
+            <span class="balance-label">💰 Twój balans</span>
+            <span class="balance-value" id="balance-value">1000</span>
+        </div>
+
+        <div class="bet-grid" id="bet-buttons">
             <button class="bet-btn" data-bet="10">10</button>
             <button class="bet-btn" data-bet="50">50</button>
             <button class="bet-btn" data-bet="100">100</button>
-            <button class="bet-btn" data-bet="all">ALL IN</button>
+            <button class="bet-btn" data-bet="all">ALL</button>
         </div>
-        
-        <div class="action-buttons">
-            <button class="action-btn" id="play-btn" onclick="startGame()">🎮 GRAJ</button>
-            <button class="action-btn cashout" id="cashout-btn" onclick="cashOut()" disabled>🛬 ZABIERZ</button>
+
+        <div class="action-row">
+            <button class="action-btn play-btn" id="play-btn" onclick="startGame()">🎮 GRAJ</button>
+            <button class="action-btn cashout-btn" id="cashout-btn" onclick="cashOut()" disabled>🛬 ZABIERZ</button>
         </div>
-        
-        <div id="message-area"></div>
-        
-        <div class="history" id="history">
-            📜 Historia: -
+
+        <div class="message-box" id="message-area"></div>
+
+        <div class="history-bar" id="history">
+            📍 Historia: —
         </div>
-        
-        <div class="footer">
-            Gra testowa | Wkrótce prawdziwe bonusy!
+
+        <div class="footer-note">
+            ⚡ <span>gra testowa</span> · wkrótce nagrody
         </div>
     </div>
 
     <script>
-        let tg = window.Telegram.WebApp;
+        const tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
-        
-        // Игровые переменные
+
+        // Stan gry
         let balance = 1000;
         let currentBet = 10;
         let gameActive = false;
-        let gameInterval;
         let multiplier = 1.0;
         let crashPoint = 0;
+        let gameInterval = null;
         let history = [];
-        
-        // Элементы DOM
+
+        // Elementy DOM
         const multiplierEl = document.getElementById('multiplier');
         const balanceEl = document.getElementById('balance-value');
         const playBtn = document.getElementById('play-btn');
@@ -185,8 +294,8 @@
         const messageArea = document.getElementById('message-area');
         const historyEl = document.getElementById('history');
         const betButtons = document.querySelectorAll('.bet-btn');
-        
-        // Выбор ставки
+
+        // Wybór stawki
         betButtons.forEach(btn => {
             btn.addEventListener('click', function() {
                 if (gameActive) return;
@@ -201,88 +310,42 @@
                 }
             });
         });
-        
-        // Функция старта игры
-        function startGame() {
-            if (gameActive) return;
-            if (balance < currentBet) {
-                showMessage('❌ Nie masz tyle żetonów!', 'lose');
-                return;
-            }
-            
-            // Снимаем ставку
-            balance -= currentBet;
-            updateBalance();
-            
-            // Генерируем точку краша (от 1.1 до 10.0)
-            crashPoint = 1.1 + Math.random() * 8.9;
-            multiplier = 1.0;
-            gameActive = true;
-            
-            playBtn.disabled = true;
-            cashoutBtn.disabled = false;
-            
-            // Запускаем рост множителя
-            gameInterval = setInterval(() => {
-                multiplier += 0.01;
-                multiplierEl.textContent = multiplier.toFixed(2) + 'x';
-                
-                // Проверяем краш
-                if (multiplier >= crashPoint) {
-                    crash();
-                }
-            }, 100);
+
+        // Aktualizacja salda
+        function updateBalance() {
+            balanceEl.innerText = balance;
         }
-        
-        // Функция вывода денег
-        function cashOut() {
-            if (!gameActive) return;
-            
+
+        // Pokazanie wiadomości
+        function showMessage(text, type) {
+            messageArea.innerHTML = `<div class="${type}-message">${text}</div>`;
+            setTimeout(() => messageArea.innerHTML = '', 2800);
+        }
+
+        // Aktualizacja historii
+        function updateHistory() {
+            if (history.length === 0) {
+                historyEl.innerHTML = '📍 Historia: —';
+            } else {
+                historyEl.innerHTML = '📍 ' + history.slice(0, 6).join(' · ');
+            }
+        }
+
+        // Crash
+        function crash() {
             clearInterval(gameInterval);
-            
-            // Рассчитываем выигрыш
-            let winAmount = Math.floor(currentBet * multiplier);
-            balance += winAmount;
-            
-            showMessage(`✅ Wygrana! +${winAmount} żetonów (x${multiplier.toFixed(2)})`, 'win');
-            
-            // Добавляем в историю
-            history.unshift(`x${multiplier.toFixed(2)}`);
-            if (history.length > 5) history.pop();
-            updateHistory();
-            
             gameActive = false;
             playBtn.disabled = false;
             cashoutBtn.disabled = true;
-            updateBalance();
-            multiplierEl.textContent = '1.00x';
-            
-            // Отправляем результат в бота
-            tg.sendData(JSON.stringify({
-                action: 'win',
-                multiplier: multiplier.toFixed(2),
-                win: winAmount,
-                balance: balance
-            }));
-        }
-        
-        // Функция краша
-        function crash() {
-            clearInterval(gameInterval);
             
             showMessage(`💥 KRAKS! Straciłeś ${currentBet} żetonów`, 'lose');
             
-            // Добавляем в историю
-            history.unshift(`💥 x${crashPoint.toFixed(2)}`);
-            if (history.length > 5) history.pop();
+            history.unshift(`💥${crashPoint.toFixed(2)}x`);
+            if (history.length > 8) history.pop();
             updateHistory();
             
-            gameActive = false;
-            playBtn.disabled = false;
-            cashoutBtn.disabled = true;
-            multiplierEl.textContent = '1.00x';
-            
-            // Отправляем результат в бота
+            multiplierEl.innerText = '1.00x';
+
             tg.sendData(JSON.stringify({
                 action: 'crash',
                 crash: crashPoint.toFixed(2),
@@ -290,27 +353,67 @@
                 balance: balance
             }));
         }
-        
-        // Обновление баланса
-        function updateBalance() {
-            balanceEl.textContent = balance;
+
+        // Wypłata
+        function cashOut() {
+            if (!gameActive) return;
+
+            clearInterval(gameInterval);
+            gameActive = false;
+            playBtn.disabled = false;
+            cashoutBtn.disabled = true;
+
+            const win = Math.floor(currentBet * multiplier);
+            balance += win;
+            updateBalance();
+
+            showMessage(`✅ WYGRANA! +${win} (${multiplier.toFixed(2)}x)`, 'win');
+            
+            history.unshift(`✅${multiplier.toFixed(2)}x`);
+            if (history.length > 8) history.pop();
+            updateHistory();
+            
+            multiplierEl.innerText = '1.00x';
+
+            tg.sendData(JSON.stringify({
+                action: 'win',
+                multiplier: multiplier.toFixed(2),
+                win: win,
+                balance: balance
+            }));
         }
-        
-        // Показ сообщений
-        function showMessage(text, type) {
-            messageArea.innerHTML = `<div class="message ${type}">${text}</div>`;
-            setTimeout(() => {
-                messageArea.innerHTML = '';
-            }, 3000);
+
+        // Start gry
+        function startGame() {
+            if (gameActive) return;
+            if (balance < currentBet) {
+                showMessage('❌ Za mało żetonów', 'lose');
+                return;
+            }
+
+            balance -= currentBet;
+            updateBalance();
+
+            crashPoint = 1.1 + Math.random() * 8.9; // od 1.1 do 10.0
+            multiplier = 1.0;
+            gameActive = true;
+
+            playBtn.disabled = true;
+            cashoutBtn.disabled = false;
+
+            gameInterval = setInterval(() => {
+                multiplier += 0.01;
+                multiplierEl.innerText = multiplier.toFixed(2) + 'x';
+
+                if (multiplier >= crashPoint) {
+                    crash();
+                }
+            }, 90);
         }
-        
-        // Обновление истории
-        function updateHistory() {
-            historyEl.innerHTML = '📜 Historia: ' + history.join(' | ');
-        }
-        
-        // Инициализация
+
+        // Pierwsze ustawienie
         updateBalance();
+        betButtons[0].classList.add('selected'); // domyślnie 10
     </script>
 </body>
 </html>
