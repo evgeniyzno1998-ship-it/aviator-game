@@ -6,14 +6,26 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-    <h1>✈️ Aviator Game</h1>
-    <p>Скоро здесь будет игра!</p>
-    <p>GitHub Pages работает!</p>
-    
+    <h1 id="aviator-game">✈️ Aviator Game</h1>
+    <p>Добро пожаловать в мир авиации!</p>
+    <p>Введите текст для отправки:</p>
+    <textarea id="message" rows="10" cols="50"></textarea>
+    <br><br>
+    <button onclick="sendMessage()">Отправить в Telegram</button>
+
     <script>
         let tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
+
+        function sendMessage() {
+            let text = document.getElementById("message").value;
+            if (text) {
+                tg.sendData(text); // Отправляет данные в бота
+            } else {
+                alert("Введите текст!");
+            }
+        }
     </script>
 </body>
 </html>
