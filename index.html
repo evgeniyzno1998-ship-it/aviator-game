@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AirCas ✈️</title>
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -22,21 +21,41 @@
             padding: 12px;
         }
 
-        .game-card {
+        .game-container {
             max-width: 480px;
             width: 100%;
             background: rgba(18, 28, 40, 0.95);
             border-radius: 32px;
-            padding: 20px 16px 24px;
+            padding: 20px 16px;
             border: 1px solid rgba(255,215,0,0.2);
+        }
+
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: linear-gradient(180deg, #1e3b4a, #0f2835);
+            border-radius: 24px;
+            overflow: hidden;
+            margin-bottom: 16px;
+            border: 1px solid #3f5567;
         }
 
         #gameCanvas {
             width: 100%;
-            aspect-ratio: 16/9;
-            border-radius: 24px;
-            margin-bottom: 16px;
-            border: 1px solid #3f5567;
+            height: 100%;
+            display: block;
+        }
+
+        .multiplier {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 32px;
+            font-weight: bold;
+            color: #ffd966;
+            text-shadow: 0 0 10px #ffb347;
+            z-index: 10;
         }
 
         .balance-panel {
@@ -76,16 +95,15 @@
             font-weight: 600;
             padding: 12px 0;
             border-radius: 30px;
-            box-shadow: 0 4px 0 #0f171f;
             cursor: pointer;
             transition: 0.2s;
         }
 
         .bet-btn.selected {
-            background: linear-gradient(145deg, #f5b042, #e08e1a);
+            background: #f5b042;
             border-color: #ffc107;
             color: #0b0f15;
-            box-shadow: 0 4px 0 #9e621b, 0 0 15px #ffb347;
+            box-shadow: 0 0 15px #ffb347;
         }
 
         .action-row {
@@ -103,12 +121,11 @@
             font-size: 18px;
             text-transform: uppercase;
             cursor: pointer;
-            box-shadow: 0 4px 0 #0f1a20;
             color: white;
         }
 
         .play-btn {
-            background: linear-gradient(145deg, #1f8b4c, #0f6e3a);
+            background: #1f8b4c;
         }
 
         .play-btn:disabled {
@@ -117,7 +134,7 @@
         }
 
         .cashout-btn {
-            background: linear-gradient(145deg, #cc7b2b, #b35f1a);
+            background: #cc7b2b;
         }
 
         .cashout-btn:disabled {
@@ -133,17 +150,12 @@
             margin: 16px 0 8px;
             max-height: 120px;
             overflow-y: auto;
-            scrollbar-width: thin;
-            scrollbar-color: #ffd966 #1a2c38;
         }
 
         .history-item {
             padding: 6px 10px;
             margin: 2px 0;
             border-radius: 8px;
-            font-size: 14px;
-            display: flex;
-            justify-content: space-between;
             background: #1a2c38;
             color: #c0d2e0;
         }
@@ -156,6 +168,17 @@
         .history-item.bigwin {
             background: #4a1d63;
             color: #ffb0ff;
+        }
+
+        .history-item.superwin {
+            background: #b8860b;
+            color: #000;
+        }
+
+        .history-item.grandwin {
+            background: #daa520;
+            color: #000;
+            font-weight: bold;
         }
 
         .live-counter {
@@ -184,14 +207,17 @@
     </style>
 </head>
 <body>
-    <div class="game-card">
+    <div class="game-container">
         <h1 style="color: #ffd966; text-align: center; margin-bottom: 8px;">✈️ AirCas</h1>
 
-        <div id="gameCanvas"></div>
+        <div class="canvas-container">
+            <canvas id="gameCanvas"></canvas>
+            <div class="multiplier" id="multiplier">1.00x</div>
+        </div>
 
         <div class="balance-panel">
             <span>💰 Twój balans</span>
-            <span class="balance-value" id="balance-value">1000</span>
+            <span class="balance-value" id="balance">1000</span>
         </div>
 
         <div class="bet-grid" id="bet-buttons">
@@ -202,15 +228,11 @@
         </div>
 
         <div class="action-row">
-            <button class="action-btn play-btn" id="play-btn">🎮 GRAJ</button>
-            <button class="action-btn cashout-btn" id="cashout-btn" disabled>🛬 ZABIERZ</button>
+            <button class="action-btn play-btn" id="playBtn">🎮 GRAJ</button>
+            <button class="action-btn cashout-btn" id="cashoutBtn" disabled>🛬 ZABIERZ</button>
         </div>
 
-        <div class="history-container" id="historyContainer">
-            <div class="history-item win">x2.34 · +120 🎰</div>
-            <div class="history-item">x1.45 · 💥</div>
-            <div class="history-item win">x1.87 · +87</div>
-        </div>
+        <div class="history-container" id="history"></div>
 
         <div class="live-counter">
             <span class="live-dot"></span>
@@ -226,258 +248,208 @@
             tg.expand();
         }
 
+        // Canvas
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
         // Игровые переменные
         let balance = 1000;
         let currentBet = 10;
         let gameActive = false;
-        let currentMultiplier = 1.0;
+        let multiplier = 1.0;
         let crashPoint = 0;
         let gameInterval = null;
         let liveCount = 128;
 
         // DOM элементы
-        const balanceEl = document.getElementById('balance-value');
-        const playBtn = document.getElementById('play-btn');
-        const cashoutBtn = document.getElementById('cashout-btn');
+        const balanceEl = document.getElementById('balance');
+        const multiplierEl = document.getElementById('multiplier');
+        const playBtn = document.getElementById('playBtn');
+        const cashoutBtn = document.getElementById('cashoutBtn');
+        const historyEl = document.getElementById('history');
         const liveCountEl = document.getElementById('liveCount');
-        const historyContainer = document.getElementById('historyContainer');
 
-        // Phaser настройки
-        const config = {
-            type: Phaser.AUTO,
-            parent: 'gameCanvas',
-            width: 480,
-            height: 270,
-            scene: {
-                preload: preload,
-                create: create,
-                update: update
-            }
-        };
-        const game = new Phaser.Game(config);
+        // Позиция самолёта
+        let planeX = 0;
 
-        let plane;
-        let clouds = [];
-        let multiplierText;
-        let explosion;
-        let smoke = [];
-
-        function preload() {
-            // Создаём спрайты прямо в коде (без внешних файлов)
-            this.load.image('pixel', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==');
-        }
-
-        function create() {
-            // Градиентный фон (небо)
-            const bg = this.add.graphics();
-            bg.fillGradientStyle(0x1e3b4a, 0x1e3b4a, 0x0f2835, 0x0f2835, 1);
-            bg.fillRect(0, 0, 480, 270);
-
-            // Облака (пушистые)
-            for (let i = 0; i < 6; i++) {
-                const cloud = this.add.graphics();
-                cloud.fillStyle(0xffffff, 0.2);
-                
-                // Рисуем пушистое облако из нескольких кругов
-                cloud.fillCircle(50 + i * 70, 40 + (i % 3) * 20, 20);
-                cloud.fillCircle(70 + i * 70, 30 + (i % 3) * 20, 25);
-                cloud.fillCircle(90 + i * 70, 40 + (i % 3) * 20, 20);
-                cloud.fillCircle(60 + i * 70, 55 + (i % 3) * 20, 15);
-                
-                clouds.push(cloud);
-            }
-
-            // Самолёт (настоящий)
-            plane = this.add.graphics();
-            
-            // Текст множителя
-            multiplierText = this.add.text(360, 20, '1.00x', {
-                fontSize: '32px',
-                fontFamily: 'Inter',
-                color: '#ffd966',
-                stroke: '#000000',
-                strokeThickness: 4,
-                shadow: { color: '#ffb347', blur: 10, fill: true }
-            });
-
-            // Эффект взрыва
-            explosion = this.add.graphics();
-            explosion.visible = false;
-
-            // Дым (для эффекта)
-            for (let i = 0; i < 3; i++) {
-                const s = this.add.graphics();
-                s.fillStyle(0xaaaaaa, 0.5);
-                s.fillCircle(0, 0, 10);
-                s.visible = false;
-                smoke.push(s);
-            }
-        }
-
-        function update() {
-            if (!plane) return;
-
-            // Очищаем и перерисовываем самолёт
-            plane.clear();
-            
-            if (gameActive) {
-                // Самолёт летит (позиция зависит от множителя)
-                const progress = Math.min(currentMultiplier / 20, 0.9);
-                const x = 50 + progress * 380;
-                const y = 150 + Math.sin(Date.now() * 0.005) * 10;
-
-                // Рисуем красивый самолёт
-                plane.fillStyle(0xffdd44); // Жёлтый корпус
-                plane.fillTriangle(x, y-10, x+35, y, x, y+10);
-                
-                plane.fillStyle(0xffaa00); // Тёмно-жёлтые крылья
-                plane.fillRect(x+15, y-15, 12, 5);
-                plane.fillRect(x+15, y+10, 12, 5);
-                
-                plane.fillStyle(0xcc8800); // Хвост
-                plane.fillTriangle(x-5, y-5, x-20, y-12, x-20, y);
-                
-                // Окошко
-                plane.fillStyle(0x88ccff);
-                plane.fillCircle(x+20, y-3, 3);
-                
-                // Дым из хвоста
-                smoke.forEach((s, i) => {
-                    s.visible = true;
-                    s.x = x - 30 - i * 5;
-                    s.y = y - 5 + Math.sin(Date.now() * 0.02 + i) * 3;
-                });
-            } else {
-                // Самолёт на земле (статичный)
-                plane.fillStyle(0xffdd44);
-                plane.fillTriangle(50, 145, 85, 150, 50, 155);
-                plane.fillStyle(0xffaa00);
-                plane.fillRect(65, 135, 12, 5);
-                plane.fillRect(65, 160, 12, 5);
-                plane.fillStyle(0x88ccff);
-                plane.fillCircle(70, 147, 3);
-                
-                smoke.forEach(s => s.visible = false);
-            }
-
-            // Обновляем текст множителя
-            multiplierText.setText(currentMultiplier.toFixed(2) + 'x');
-
-            // Эффект взрыва при краше
-            if (!gameActive && crashPoint > 0 && currentMultiplier >= crashPoint) {
-                explosion.visible = true;
-                explosion.clear();
-                
-                // Взрыв из оранжевых и красных кругов
-                for (let i = 0; i < 8; i++) {
-                    const intensity = Math.sin(Date.now() * 0.02 + i) * 0.5 + 0.5;
-                    explosion.fillStyle(0xff6600, intensity);
-                    explosion.fillCircle(250 + Math.sin(i) * 30, 150 + Math.cos(i) * 30, 15 + i * 2);
-                    
-                    explosion.fillStyle(0xff3300, intensity);
-                    explosion.fillCircle(240 + Math.cos(i) * 25, 140 + Math.sin(i) * 25, 10 + i);
-                }
-            } else {
-                explosion.visible = false;
-            }
-
-            // Анимация облаков
-            clouds.forEach((cloud, i) => {
-                cloud.x += 0.3;
-                if (cloud.x > 500) cloud.x = -100;
-            });
-        }
-
-        // Функции игры
+        // Шансы (реальные)
         function getCrashPoint() {
             const r = Math.random();
-            if (r < 0.4) return 1.01 + Math.random() * 0.49;
-            if (r < 0.7) return 1.5 + Math.random() * 1.0;
-            if (r < 0.85) return 2.5 + Math.random() * 2.5;
-            if (r < 0.95) return 5.0 + Math.random() * 5.0;
-            if (r < 0.99) return 10.0 + Math.random() * 10.0;
-            return 20.0 + Math.random() * 30.0;
+            if (r < 0.4) return 1.01 + Math.random() * 0.49;      // 40% до 1.5x
+            if (r < 0.7) return 1.5 + Math.random() * 1.0;       // 30% до 2.5x
+            if (r < 0.85) return 2.5 + Math.random() * 2.5;      // 15% до 5x
+            if (r < 0.95) return 5.0 + Math.random() * 5.0;      // 10% до 10x
+            if (r < 0.99) return 10.0 + Math.random() * 10.0;    // 4% до 20x
+            return 20.0 + Math.random() * 30.0;                   // 1% выше 20x
         }
 
+        // Скорость роста
         function getSpeed() {
-            if (currentMultiplier < 2) return 0.006;
-            if (currentMultiplier < 5) return 0.012;
-            if (currentMultiplier < 10) return 0.02;
-            if (currentMultiplier < 20) return 0.03;
+            if (multiplier < 2) return 0.006;
+            if (multiplier < 5) return 0.012;
+            if (multiplier < 10) return 0.02;
+            if (multiplier < 20) return 0.03;
             return 0.05;
         }
 
+        // Тип выигрыша
+        function getWinType(mult) {
+            if (mult >= 20) return 'grandwin';
+            if (mult >= 10) return 'superwin';
+            if (mult >= 5) return 'bigwin';
+            return 'win';
+        }
+
+        // Добавить в историю
         function addHistory(mult, win = null) {
             const item = document.createElement('div');
             item.className = 'history-item';
-            if (win) item.classList.add('win');
-            if (mult >= 5) item.classList.add('bigwin');
+            
+            let type = 'normal';
+            if (win) {
+                type = getWinType(mult);
+                item.classList.add(type);
+            }
             
             let text = `x${mult.toFixed(2)}`;
             if (win) {
                 text += ` · +${win}`;
-                if (mult >= 5) text += ' 🎰';
+                if (type === 'bigwin') text += ' 🎰';
+                if (type === 'superwin') text += ' ⭐';
+                if (type === 'grandwin') text += ' 🏆';
             } else {
                 text += ` · 💥`;
             }
             
             item.textContent = text;
-            historyContainer.prepend(item);
+            historyEl.prepend(item);
             
-            if (historyContainer.children.length > 20) {
-                historyContainer.removeChild(historyContainer.lastChild);
+            if (historyEl.children.length > 20) {
+                historyEl.removeChild(historyEl.lastChild);
             }
         }
 
+        // Отрисовка
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Небо
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#1e3b4a');
+            gradient.addColorStop(1, '#0f2835');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Самолёт
+            const planeScreenX = Math.min(planeX, canvas.width - 40);
+            const y = canvas.height / 2;
+            
+            ctx.save();
+            ctx.translate(planeScreenX, y);
+            
+            // Корпус
+            ctx.fillStyle = '#ffdd44';
+            ctx.beginPath();
+            ctx.moveTo(0, -8);
+            ctx.lineTo(30, 0);
+            ctx.lineTo(0, 8);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Крылья
+            ctx.fillStyle = '#ffaa00';
+            ctx.fillRect(10, -12, 8, 4);
+            ctx.fillRect(10, 8, 8, 4);
+            
+            // Хвост
+            ctx.fillStyle = '#cc8800';
+            ctx.beginPath();
+            ctx.moveTo(-5, -5);
+            ctx.lineTo(-15, -10);
+            ctx.lineTo(-15, 0);
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.restore();
+        }
+
+        // Краш
         function crash() {
             clearInterval(gameInterval);
             gameActive = false;
             playBtn.disabled = false;
             cashoutBtn.disabled = true;
             addHistory(crashPoint);
+            multiplier = 1.0;
+            multiplierEl.innerText = '1.00x';
+            planeX = 0;
+            draw();
         }
 
+        // Вывод
         function cashOut() {
             if (!gameActive) return;
+
             clearInterval(gameInterval);
             gameActive = false;
             playBtn.disabled = false;
             cashoutBtn.disabled = true;
-            const win = Math.floor(currentBet * currentMultiplier);
+
+            const win = Math.floor(currentBet * multiplier);
             balance += win;
             balanceEl.innerText = balance;
-            addHistory(currentMultiplier, win);
+
+            addHistory(multiplier, win);
             
+            multiplier = 1.0;
+            multiplierEl.innerText = '1.00x';
+            planeX = 0;
+            draw();
+
             if (tg) {
                 tg.sendData(JSON.stringify({
                     action: 'win',
-                    multiplier: currentMultiplier,
+                    multiplier: multiplier,
                     win: win,
                     balance: balance
                 }));
             }
         }
 
+        // Старт
         function startGame() {
             if (gameActive) return;
             if (balance < currentBet) return;
-            
+
             balance -= currentBet;
             balanceEl.innerText = balance;
-            
+
             crashPoint = getCrashPoint();
-            currentMultiplier = 1.0;
+            multiplier = 1.0;
+            planeX = 20;
             gameActive = true;
-            
+
             playBtn.disabled = true;
             cashoutBtn.disabled = false;
-            
+
             gameInterval = setInterval(() => {
-                currentMultiplier += getSpeed();
-                if (currentMultiplier >= crashPoint) {
+                multiplier += getSpeed();
+                multiplierEl.innerText = multiplier.toFixed(2) + 'x';
+                planeX = Math.min(planeX + 2, canvas.width - 40);
+                draw();
+
+                if (multiplier >= crashPoint) {
                     crash();
                 }
-            }, 100);
+            }, 50);
         }
 
         // Кнопки ставок
@@ -499,7 +471,7 @@
         playBtn.addEventListener('click', startGame);
         cashoutBtn.addEventListener('click', cashOut);
 
-        // Счётчик онлайн
+        // Live-счётчик
         setInterval(() => {
             const change = Math.floor(Math.random() * 7) + 2;
             if (Math.random() > 0.5) {
@@ -509,6 +481,9 @@
             }
             liveCountEl.innerText = liveCount;
         }, 7000);
+
+        // Стартовая отрисовка
+        draw();
     </script>
 </body>
 </html>
